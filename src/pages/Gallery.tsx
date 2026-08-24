@@ -95,7 +95,7 @@ export default function Gallery() {
       </section>
 
       {/* Lightbox */}
-      {lightbox !== null && (
+      {lightbox !== null && items[lightbox] && (
         <div
           className="fixed inset-0 z-[100] bg-ink-900/90 flex items-center justify-center p-4 animate-fade-in"
           onClick={() => setLightbox(null)}

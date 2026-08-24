@@ -37,14 +37,21 @@ Deno.serve(async (req: Request) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Fetch notification email from settings
+    // Fetch notification email and site URL from settings
     const { data: settingData } = await supabase
       .from("settings")
       .select("value")
       .eq("key", "notification_email")
       .maybeSingle();
 
+    const { data: siteSetting } = await supabase
+      .from("settings")
+      .select("value")
+      .eq("key", "site_url")
+      .maybeSingle();
+
     const notifyEmail = settingData?.value ?? "hello@fargosalon.com";
+    const siteUrl = (siteSetting?.value ?? "https://fargosalon.com").replace(/\/$/, "");
 
     // Build email content based on type
     let subject: string;
@@ -75,7 +82,7 @@ Deno.serve(async (req: Request) => {
           <ul style="color: #3a3025;">${serviceList}</ul>
           ${payload.notes ? `<p style="color: #6b5a4a;"><strong>Notes:</strong> ${payload.notes}</p>` : ""}
           <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
-          <p style="color: #8a7766; font-size: 13px;">Manage this booking in the <a href="${supabaseUrl.replace('.supabase.co', '')}/admin/bookings" style="color: #b85a4e;">admin dashboard</a>.</p>
+          <p style="color: #8a7766; font-size: 13px;">Manage this booking in the <a href="${siteUrl}/admin/bookings" style="color: #b85a4e;">admin dashboard</a>.</p>
         </div>
       `;
     } else {
@@ -93,7 +100,7 @@ Deno.serve(async (req: Request) => {
           <h3 style="color: #1a1612; font-family: Georgia, serif;">Message</h3>
           <p style="color: #3a3025; padding: 12px; background: #f5f0e8; border-left: 3px solid #b85a4e;">${payload.message ?? "No message"}</p>
           <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
-          <p style="color: #8a7766; font-size: 13px;">Reply directly to ${payload.customer_email} or manage in the <a href="${supabaseUrl.replace('.supabase.co', '')}/admin/inquiries" style="color: #b85a4e;">admin dashboard</a>.</p>
+          <p style="color: #8a7766; font-size: 13px;">Reply directly to ${payload.customer_email} or manage in the <a href="${siteUrl}/admin/inquiries" style="color: #b85a4e;">admin dashboard</a>.</p>
         </div>
       `;
     }

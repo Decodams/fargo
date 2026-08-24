@@ -136,6 +136,9 @@ export default function Booking() {
           }
         });
         setExistingBookings([...new Set(slots)]);
+      })
+      .catch(() => {
+        setExistingBookings([]);
       });
   }, [state.date, state.staffId]);
 

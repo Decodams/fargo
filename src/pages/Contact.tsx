@@ -5,6 +5,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
 import { getSetting } from '@/lib/utils';
 import type { Product } from '@/types';
+import { FALLBACK_PRODUCTS } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 
 export default function Contact() {
@@ -30,9 +31,12 @@ export default function Contact() {
       .eq('is_active', true)
       .order('display_order')
       .then(({ data }) => {
-        setProducts(data ?? []);
+        setProducts(data && data.length ? data : FALLBACK_PRODUCTS);
         const productSlug = searchParams.get('product');
         if (productSlug) setSelectedProduct(productSlug);
+      })
+      .catch(() => {
+        setProducts(FALLBACK_PRODUCTS);
       });
   }, [searchParams]);
 

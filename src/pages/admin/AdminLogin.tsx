@@ -11,7 +11,7 @@ export default function AdminLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if any admin users exist — if not, default to signup mode
+    // Redirect to the dashboard if a session already exists
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate('/admin');
     });
