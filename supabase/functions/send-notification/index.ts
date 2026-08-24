@@ -23,6 +23,7 @@ interface NotificationPayload {
   message?: string;
   inquiry_type?: string;
   product_name?: string;
+  confirmation_status?: 'pending' | 'confirmed';
 }
 
 Deno.serve(async (req: Request) => {
@@ -64,10 +65,15 @@ Deno.serve(async (req: Request) => {
         ? new Date(payload.scheduled_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })
         : "Not specified";
 
+      // Determine confirmation state
+      const isConfirmationPending = payload.confirmation_status === 'pending';
+      const confirmationLabel = isConfirmationPending ? 'Pending Admin Confirmation' : 'Confirmed';
+
       htmlBody = `
         <div style="font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #faf7f2;">
           <h2 style="color: #1a1612; font-family: Georgia, serif;">New Booking Received</h2>
           <p style="color: #6b5a4a;">Reference: <strong>${payload.reference ?? "N/A"}</strong></p>
+          <p style="color: #6b5a4a; font-weight: bold; margin-top: 8px;">Status: <strong>${confirmationLabel}</strong></p>
           <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
             <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Customer</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">${payload.customer_name}</td></tr>
             <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Email</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">${payload.customer_email}</td></tr>
@@ -81,6 +87,10 @@ Deno.serve(async (req: Request) => {
           <h3 style="color: #1a1612; font-family: Georgia, serif;">Services</h3>
           <ul style="color: #3a3025;">${serviceList}</ul>
           ${payload.notes ? `<p style="color: #6b5a4a;"><strong>Notes:</strong> ${payload.notes}</p>` : ""}
+          <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
+          ${isConfirmationPending
+            ? '<p style="color: #b85a4e; font-weight: bold;">⚠ This booking requires admin confirmation. The booking confirmation ticket will be released once the admin confirms the payment.</p>'
+            : '<p style="color: #3a3025;">✅ Booking confirmed. <a href="${siteUrl}/booking/confirmation" style="color: #b85a4e;">View confirmation ticket</a>.</p>'}
           <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
           <p style="color: #8a7766; font-size: 13px;">Manage this booking in the <a href="${siteUrl}/admin/bookings" style="color: #b85a4e;">admin dashboard</a>.</p>
         </div>

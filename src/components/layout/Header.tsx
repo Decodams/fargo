@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
@@ -28,6 +29,15 @@ export default function Header() {
     setMenuOpen(false);
   }, [location.pathname]);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [menuOpen]);
+
   const isHome = location.pathname === '/';
   const solidHeader = scrolled || !isHome || menuOpen;
 
@@ -36,8 +46,8 @@ export default function Header() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         solidHeader
           ? 'bg-cream-50/95 backdrop-blur-md border-b border-ink-100'
-          : 'bg-transparent'
-      }`}
+          : 'bg-transparent'}
+      `}
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between h-20">
@@ -88,8 +98,8 @@ export default function Header() {
               to="/booking"
               className={`inline-flex items-center justify-center px-6 py-2.5 text-sm tracking-wider-2 uppercase font-medium transition-all duration-300 ${
                 solidHeader
-                  ? 'bg-ink-900 text-cream-50 hover:bg-rose-500'
-                  : 'bg-cream-50 text-ink-900 hover:bg-rose-500 hover:text-cream-50'
+                  ? 'bg-ink-900 text-cream-50:hover:bg-rose-500'
+                  : 'bg-cream-50 text-ink-900:hover:bg-rose-500 hover:text-cream-50'
               }`}
             >
               Book Now
@@ -110,7 +120,15 @@ export default function Header() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="lg:hidden bg-cream-50 border-t border-ink-100 animate-fade-in">
+        <motion.div
+          className="lg:hidden bg-cream-50 border-t border-ink-100"
+          style={{
+            transform: menuOpen ? 'translateY(0)' : 'translateY(-100%)',
+            opacity: menuOpen ? 1 : 0,
+          }}
+          whileHover={{ opacity: 0.9 }}
+          exit={{ opacity: 0, transition: { duration: 0.2 } }}
+        >
           <nav className="flex flex-col px-5 py-6 gap-1">
             {NAV_LINKS.map((link) => (
               <NavLink
@@ -132,7 +150,7 @@ export default function Header() {
               Book Now
             </Link>
           </nav>
-        </div>
+        </motion.div>
       )}
     </header>
   );

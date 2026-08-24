@@ -286,7 +286,8 @@ export default function Booking() {
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: totalDuration + bufferMin,
         total_price: grandTotal,
-        payment_status: state.prepay ? 'paid' : 'unpaid',
+        payment_status: state.prepay ? 'prepaid' : 'postpaid',
+        confirmation_status: state.prepay ? 'pending' : 'confirmed',
         status: 'pending',
         notes: state.notes.trim() || null,
       };
@@ -311,7 +312,7 @@ export default function Booking() {
         }));
         await supabase.from('booking_services').insert(bsData);
 
-        // Fire notification email (non-blocking — don't fail the booking if email fails)
+// Fire notification email (non-blocking — don't fail the booking if email fails)
         try {
           const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
           await fetch(fnUrl, {
@@ -319,7 +320,7 @@ export default function Booking() {
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
             body: JSON.stringify({
               type: 'booking',
-          reference: reference,
+              reference: reference,
               customer_name: state.customerName.trim(),
               customer_email: state.customerEmail.trim(),
               customer_phone: state.customerPhone.trim(),
@@ -330,6 +331,7 @@ export default function Booking() {
               services: state.selectedServices.map((s) => s.name),
               home_address: state.mode === 'home' ? state.homeAddress.trim() : null,
               notes: state.notes.trim() || null,
+              confirmation_status: state.prepay ? 'pending' : 'confirmed',
             }),
           });
         } catch {
