@@ -74,6 +74,7 @@ ON CONFLICT (day_of_week) DO NOTHING;
 INSERT INTO settings (key, value) VALUES
   ('business_name', 'Fargo Unisex Salon & Spa'),
   ('notification_email', 'hello@fargosalon.com'),
+  ('tiktok_url', 'https://www.tiktok.com/@fargo.unisex.salon'),
   ('site_url', 'https://fargosalon.com'),
   ('contact_phone', '+234 800 000 0000'),
   ('contact_email', 'hello@fargosalon.com'),

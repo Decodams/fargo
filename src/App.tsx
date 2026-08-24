@@ -60,6 +60,11 @@ export default function App() {
           <Route path="products" element={<AdminProducts />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="content" element={<AdminContent />} />
+          <Route path="seo" element={<AdminSEO />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="faq" element={<AdminFAQ />} />
+          <Route path="staff" element={<AdminStaff />} />
         </Route>
       </Routes>
     </BrowserRouter>

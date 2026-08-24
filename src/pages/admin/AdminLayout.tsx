@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, MessageSquare, Scissors, Package, Users, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, MessageSquare, Scissors, Package, Users, Settings, LogOut, Menu, X, Search, Folder, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 const NAV = [
@@ -11,6 +11,11 @@ const NAV = [
   { to: '/admin/products', label: 'Products', icon: Package, end: false },
   { to: '/admin/customers', label: 'Customers', icon: Users, end: false },
   { to: '/admin/settings', label: 'Settings', icon: Settings, end: false },
+  { to: '/admin/content', label: 'Content', icon: Folder, end: false },
+  { to: '/admin/seo', label: 'SEO', icon: Search, end: false },
+  { to: '/admin/categories', label: 'Categories', icon: Folder, end: false },
+  { to: '/admin/faq', label: 'FAQ', icon: MessageCircle, end: false },
+  { to: '/admin/staff', label: 'Staff', icon: Users, end: false },
 ];
 
 export default function AdminLayout() {

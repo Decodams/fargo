@@ -91,11 +91,39 @@
   overflow: hidden;
 }
 
-/* Hero entrance — single coordinated sequence */
-.hero-enter {
-  opacity: 0;
-  animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Marquee band */
+.marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 6px 0;
+  background: linear-gradient(90deg, ink-50, cream-50);
+  margin: 12px 0;
 }
+.marquee span {
+  display: inline-block;
+  animation: marquee 18s linear infinite;
+  color: ink-900;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  padding-right: 3rem;
+}
+@keyframes marquee {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Hero accent */
+.hero-accent {
+  margin-top: 0.75rem;
+  color: ink-600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Slightly heavier card borders */
+.border-thick { border-width: 2px; }
+
 .hero-enter-delay-1 { animation-delay: 0.12s; }
 .hero-enter-delay-2 { animation-delay: 0.24s; }
 .hero-enter-delay-3 { animation-delay: 0.36s; }

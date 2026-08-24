@@ -12,10 +12,10 @@ interface CardProps {
 }
 
 const VARIANTS: Record<CardVariant, string> = {
-  light: 'bg-cream-50 border border-ink-100',
-  muted: 'bg-cream-100 border border-ink-100',
-  dark: 'bg-ink-800 border border-ink-700',
-  ghost: 'bg-transparent border border-ink-100',
+  light: 'bg-cream-50 border-2 border-ink-100',
+  muted: 'bg-cream-100 border-2 border-ink-100',
+  dark: 'bg-ink-800 border-2 border-ink-700',
+  ghost: 'bg-transparent border-2 border-ink-100',
 };
 
 const PADDING: Record<NonNullable<CardProps['padding']>, string> = {

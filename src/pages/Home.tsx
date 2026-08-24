@@ -123,6 +123,7 @@ export default function Home() {
             <div className="lg:col-span-7 min-w-0">
               <Reveal>
                 <p className="text-xs uppercase tracking-wider-3 text-rose-500 mb-4">{getSetting(settings, 'philosophy_eyebrow')}</p>
+<div className="marquee mb-8 text-center"><span>Fargo Unisex Salon — Hair, Beauty & Spa</span></div>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display text-ink-900 leading-[1.15] text-balance">
                   {getSetting(settings, 'philosophy_title')}
                 </h2>

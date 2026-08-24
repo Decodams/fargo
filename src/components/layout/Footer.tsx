@@ -10,6 +10,7 @@ export default function Footer() {
   const address = getSetting(settings, 'address');
   const instagram = getSetting(settings, 'instagram_url');
   const facebook = getSetting(settings, 'facebook_url');
+  const tiktok = getSetting(settings, 'tiktok_url');
 
   return (
     <footer className="bg-ink-900 text-cream-100">
@@ -40,6 +41,15 @@ export default function Footer() {
                 aria-label="Facebook"
               >
                 <Facebook size={16} />
+              </a>
+              <a
+                href={tiktok}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 flex items-center justify-center text-ink-500 hover:text-rose-400 transition-colors"
+                aria-label="TikTok"
+              >
+                TikTok
               </a>
             </div>
           </div>
