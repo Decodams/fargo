@@ -21,6 +21,11 @@ import AdminServices from '@/pages/admin/AdminServices';
 import AdminProducts from '@/pages/admin/AdminProducts';
 import AdminCustomers from '@/pages/admin/AdminCustomers';
 import AdminSettings from '@/pages/admin/AdminSettings';
+import AdminContent from '@/pages/admin/AdminContent';
+import AdminSEO from '@/pages/admin/AdminSEO';
+import AdminCategories from '@/pages/admin/AdminCategories';
+import AdminFAQ from '@/pages/admin/AdminFAQ';
+import AdminStaff from '@/pages/admin/AdminStaff';
 import ProtectedRoute from '@/components/admin/ProtectedRoute';
 
 export default function App() {
