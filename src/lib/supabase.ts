@@ -18,8 +18,16 @@ if (!isSupabaseConfigured) {
 // time. Network requests will fail gracefully and the UI falls back to defaults.
 const supabaseUrl = rawUrl || 'https://placeholder.supabase.co';
 const supabaseAnonKey = rawKey || 'public-anon-key-placeholder';
+const safeFetch: typeof fetch = isSupabaseConfigured
+  ? fetch
+  : async () =>
+      new Response(JSON.stringify({ message: 'Supabase is not configured' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      });
 
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  global: { fetch: safeFetch },
   auth: {
     persistSession: true,
     autoRefreshToken: true,
