@@ -4,6 +4,7 @@ import { ArrowRight, Clock, Home as HomeIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPriceRange, formatDuration } from '@/lib/utils';
 import type { Service, Category } from '@/types';
+import { FALLBACK_SERVICES, FALLBACK_CATEGORIES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 
 export default function Services() {
@@ -18,8 +19,8 @@ export default function Services() {
         supabase.from('categories').select('*').order('display_order'),
         supabase.from('services').select('*').eq('is_active', true).order('display_order'),
       ]);
-      setCategories(cats ?? []);
-      setServices(svcs ?? []);
+      setCategories(withFallback(cats as Category[] | null, FALLBACK_CATEGORIES));
+      setServices(withFallback(svcs as Service[] | null, FALLBACK_SERVICES));
       setLoading(false);
     })();
   }, []);

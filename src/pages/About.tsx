@@ -4,6 +4,7 @@ import { IMAGES } from '@/lib/images';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Staff } from '@/types';
+import { FALLBACK_STAFF, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 import SectionHeading from '@/components/ui/SectionHeading';
 
@@ -16,7 +17,7 @@ export default function About() {
       .select('*')
       .eq('is_active', true)
       .order('display_order')
-      .then(({ data }) => setStaff(data ?? []));
+      .then(({ data }) => setStaff(withFallback(data as Staff[] | null, FALLBACK_STAFF)));
   }, []);
 
   return (

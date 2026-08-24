@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { formatPriceRange, formatDuration } from '@/lib/utils';
 import { IMAGES } from '@/lib/images';
 import type { Service, Category, Staff } from '@/types';
+import { FALLBACK_SERVICES, FALLBACK_CATEGORIES, FALLBACK_STAFF } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 
 const SERVICE_IMAGES: Record<string, string> = {
@@ -41,47 +42,59 @@ export default function ServiceDetail() {
     (async () => {
       if (!slug) return;
       setLoading(true);
-      const { data: svc } = await supabase
+
+      const { data: svcRaw } = await supabase
         .from('services')
         .select('*')
         .eq('slug', slug)
         .eq('is_active', true)
         .maybeSingle();
 
-      if (svc) {
-        setService(svc as Service);
-        if (svc.category_id) {
-          const { data: cat } = await supabase
-            .from('categories')
-            .select('*')
-            .eq('id', svc.category_id)
-            .maybeSingle();
-          setCategory(cat as Category);
+      const svc = (svcRaw as Service | null) ?? FALLBACK_SERVICES.find((s) => s.slug === slug) ?? null;
+      const usingFallback = !svcRaw;
 
-          const { data: rel } = await supabase
-            .from('services')
-            .select('*')
-            .eq('category_id', svc.category_id)
-            .neq('id', svc.id)
-            .eq('is_active', true)
-            .limit(3);
-          setRelated((rel ?? []) as Service[]);
-        }
+      if (svc) {
+        setService(svc);
+
+        const { data: catRaw } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('id', svc.category_id)
+          .maybeSingle();
+        const cat = (catRaw as Category | null) ?? FALLBACK_CATEGORIES.find((c) => c.id === svc.category_id) ?? null;
+        setCategory(cat);
+
+        const { data: relRaw } = await supabase
+          .from('services')
+          .select('*')
+          .eq('category_id', svc.category_id)
+          .neq('id', svc.id)
+          .eq('is_active', true)
+          .limit(3);
+        const rel = (relRaw ?? []) as Service[];
+        setRelated(
+          rel.length
+            ? rel
+            : FALLBACK_SERVICES.filter((s) => s.category_id === svc.category_id && s.id !== svc.id).slice(0, 3)
+        );
 
         const { data: ssData } = await supabase
           .from('staff_services')
           .select('staff_id')
           .eq('service_id', svc.id);
+        let staffData: Staff[] = [];
         if (ssData && ssData.length > 0) {
           const staffIds = ssData.map((s) => s.staff_id);
-          const { data: staffData } = await supabase
+          const { data: sd } = await supabase
             .from('staff')
             .select('*')
             .in('id', staffIds)
             .eq('is_active', true);
-          setStaff((staffData ?? []) as Staff[]);
+          staffData = (sd ?? []) as Staff[];
         }
+        setStaff(staffData.length ? staffData : usingFallback ? FALLBACK_STAFF : []);
       }
+
       setLoading(false);
     })();
   }, [slug]);

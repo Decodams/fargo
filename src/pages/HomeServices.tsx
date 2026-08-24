@@ -6,6 +6,7 @@ import { useSettings } from '@/lib/hooks';
 import { getSetting, formatPrice, formatPriceRange, formatDuration } from '@/lib/utils';
 import type { Service } from '@/types';
 import { IMAGES } from '@/lib/images';
+import { FALLBACK_SERVICES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 import SectionHeading from '@/components/ui/SectionHeading';
 
@@ -20,7 +21,10 @@ export default function HomeServices() {
       .eq('is_active', true)
       .eq('home_service_eligible', true)
       .order('display_order')
-      .then(({ data }) => setHomeServices(data ?? []));
+      .then(({ data }) => {
+        const rows = withFallback(data as Service[] | null, FALLBACK_SERVICES);
+        setHomeServices(rows.filter((s) => s.home_service_eligible));
+      });
   }, []);
 
   const area = getSetting(settings, 'home_service_area');

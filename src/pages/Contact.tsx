@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Instagram, Facebook, Send, CheckCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
 import { getSetting } from '@/lib/utils';
 import type { Product } from '@/types';
@@ -58,28 +58,32 @@ export default function Contact() {
         inquiryData.product_name = selectedProductObj.name;
       }
 
-      const { error: insertError } = await supabase.from('inquiries').insert(inquiryData);
+      if (isSupabaseConfigured) {
+        const { error: insertError } = await supabase.from('inquiries').insert(inquiryData);
+        if (insertError) throw insertError;
 
-      if (insertError) throw insertError;
-
-      // Fire notification email (non-blocking)
-      try {
-        const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
-        await fetch(fnUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
-          body: JSON.stringify({
-            type: 'inquiry',
-            customer_name: form.name.trim(),
-            customer_email: form.email.trim(),
-            customer_phone: form.phone.trim() || null,
-            message: form.message.trim(),
-            inquiry_type: selectedProductObj ? 'product' : 'general',
-            product_name: selectedProductObj?.name ?? null,
-          }),
-        });
-      } catch {
-        // Email failure is non-critical — inquiry was saved
+        // Fire notification email (non-blocking)
+        try {
+          const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
+          await fetch(fnUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+            body: JSON.stringify({
+              type: 'inquiry',
+              customer_name: form.name.trim(),
+              customer_email: form.email.trim(),
+              customer_phone: form.phone.trim() || null,
+              message: form.message.trim(),
+              inquiry_type: selectedProductObj ? 'product' : 'general',
+              product_name: selectedProductObj?.name ?? null,
+            }),
+          });
+        } catch {
+          // Email failure is non-critical — inquiry was saved
+        }
+      } else {
+        // Preview mode — simulate a sent inquiry so the form is fully usable offline.
+        await new Promise((r) => setTimeout(r, 500));
       }
 
       setSubmitted(true);

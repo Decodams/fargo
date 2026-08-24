@@ -4,6 +4,7 @@ import { ArrowRight, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/types';
+import { FALLBACK_PRODUCTS, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 
 const PRODUCT_IMAGES: Record<string, string> = {
@@ -35,9 +36,10 @@ export default function Products() {
       .eq('is_active', true)
       .order('display_order')
       .then(({ data }) => {
-        setProducts(data ?? []);
-        setFiltered(data ?? []);
-        const cats = [...new Set((data ?? []).map((p) => p.category).filter(Boolean))] as string[];
+        const rows = withFallback(data as Product[] | null, FALLBACK_PRODUCTS);
+        setProducts(rows);
+        setFiltered(rows);
+        const cats = [...new Set(rows.map((p) => p.category).filter(Boolean))] as string[];
         setCategories(cats);
         setLoading(false);
       });

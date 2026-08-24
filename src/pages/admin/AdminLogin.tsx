@@ -8,7 +8,6 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [hasUsers, setHasUsers] = useState<boolean | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {

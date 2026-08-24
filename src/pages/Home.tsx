@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { IMAGES } from '@/lib/images';
 import { formatPriceRange, formatDuration } from '@/lib/utils';
 import type { Service, Category } from '@/types';
+import { FALLBACK_SERVICES, FALLBACK_CATEGORIES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 import SectionHeading from '@/components/ui/SectionHeading';
 
@@ -19,8 +20,8 @@ export default function Home() {
         supabase.from('categories').select('*').order('display_order'),
         supabase.from('services').select('*').eq('is_active', true).order('display_order'),
       ]);
-      setCategories(cats ?? []);
-      setServices(svcs ?? []);
+      setCategories(withFallback(cats as Category[] | null, FALLBACK_CATEGORIES));
+      setServices(withFallback(svcs as Service[] | null, FALLBACK_SERVICES));
       setLoading(false);
     })();
   }, []);

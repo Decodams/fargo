@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Check, Clock, Home as HomeIcon, Store, Calendar, User, CreditCard, Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { ArrowRight, ArrowLeft, Check, Clock, Home as HomeIcon, Store, Calendar, CreditCard, Loader2, Info } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
 import { getSetting, formatPrice, formatPriceRange, formatDuration, DAY_NAMES, DAY_SHORT, MONTH_NAMES } from '@/lib/utils';
-import type { Service, Staff, BusinessHour, BookingService } from '@/types';
+import type { Service, Staff, BusinessHour } from '@/types';
+import { FALLBACK_SERVICES, FALLBACK_STAFF, FALLBACK_BUSINESS_HOURS, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 
 type Step = 'service' | 'mode' | 'datetime' | 'details' | 'payment' | 'submitting';
@@ -70,20 +71,27 @@ export default function Booking() {
         supabase.from('staff').select('*').eq('is_active', true).order('display_order'),
         supabase.from('business_hours').select('*').order('day_of_week'),
       ]);
-      setServices(svcs ?? []);
-      setStaff(stf ?? []);
-      setBusinessHours(bh ?? []);
+
+      // Fall back to curated offline data when the backend is empty / unconfigured
+      // so the flow is always usable for previews.
+      const resolvedServices = withFallback(svcs as Service[] | null, FALLBACK_SERVICES);
+      const resolvedStaff = withFallback(stf as Staff[] | null, FALLBACK_STAFF);
+      const resolvedHours = withFallback(bh as BusinessHour[] | null, FALLBACK_BUSINESS_HOURS);
+
+      setServices(resolvedServices);
+      setStaff(resolvedStaff);
+      setBusinessHours(resolvedHours);
       setLoading(false);
 
       // Pre-select service from URL
       const preService = searchParams.get('service');
       const preMode = searchParams.get('mode');
       if (preService) {
-        const svc = (svcs ?? []).find((s) => s.slug === preService);
+        const svc = resolvedServices.find((s) => s.slug === preService);
         if (svc) {
           setState((prev) => ({
             ...prev,
-            selectedServices: [svc as Service],
+            selectedServices: [svc],
             mode: preMode === 'home' ? 'home' : 'in_salon',
           }));
         }
@@ -93,7 +101,7 @@ export default function Booking() {
     })();
   }, [searchParams]);
 
-  // Load existing bookings when date changes
+  // Load existing bookings when date or staff selection changes
   useEffect(() => {
     if (!state.date) return;
     const start = new Date(state.date);
@@ -104,26 +112,32 @@ export default function Booking() {
     supabase
       .from('bookings')
       .select('scheduled_at,duration_minutes,staff_id')
-      .eq('status', 'confirmed')
+      .in('status', ['confirmed', 'pending'])
       .gte('scheduled_at', start.toISOString())
       .lte('scheduled_at', end.toISOString())
       .then(({ data }) => {
-        if (data) {
-          const slots: string[] = [];
-          data.forEach((b) => {
-            const startTime = new Date(b.scheduled_at);
-            const endTime = new Date(startTime.getTime() + b.duration_minutes * 60000);
-            // Mark all 30-min slots within this booking as taken
-            let t = new Date(startTime);
-            while (t < endTime) {
-              slots.push(t.toTimeString().slice(0, 5));
-              t = new Date(t.getTime() + 30 * 60000);
-            }
-          });
-          setExistingBookings([...new Set(slots)]);
+        if (!data) {
+          setExistingBookings([]);
+          return;
         }
+        const slots: string[] = [];
+        data.forEach((b) => {
+          // A slot is occupied if the chosen specialist is booked, or (no preference)
+          // if any booking without a specific specialist exists at that time.
+          const occupies =
+            !state.staffId || !b.staff_id || b.staff_id === state.staffId;
+          if (!occupies) return;
+          const startTime = new Date(b.scheduled_at);
+          const endTime = new Date(startTime.getTime() + (b.duration_minutes || 30) * 60000);
+          let t = new Date(startTime);
+          while (t < endTime) {
+            slots.push(t.toTimeString().slice(0, 5));
+            t = new Date(t.getTime() + 30 * 60000);
+          }
+        });
+        setExistingBookings([...new Set(slots)]);
       });
-  }, [state.date]);
+  }, [state.date, state.staffId]);
 
   const totalDuration = state.selectedServices.reduce((sum, s) => sum + s.duration_minutes, 0);
   const serviceTotal = state.selectedServices.reduce((sum, s) => sum + s.price_max, 0);
@@ -163,6 +177,28 @@ export default function Booking() {
         );
       case 'payment': return true;
       default: return false;
+    }
+  };
+
+  const proceedHint = (): string | null => {
+    if (canProceed()) return null;
+    switch (step) {
+      case 'service':
+        return 'Select at least one service to continue.';
+      case 'mode':
+        return 'Some selected services aren’t available for home service. Switch to In Salon or remove them.';
+      case 'datetime':
+        return 'Choose a date and an available time slot.';
+      case 'details': {
+        const missing: string[] = [];
+        if (state.customerName.trim().length <= 1) missing.push('name');
+        if (!/\S+@\S+\.\S+/.test(state.customerEmail)) missing.push('email');
+        if (state.customerPhone.trim().length < 7) missing.push('phone');
+        if (state.mode === 'home' && state.homeAddress.trim().length <= 5) missing.push('home address');
+        return `Please complete: ${missing.join(', ')}.`;
+      }
+      default:
+        return null;
     }
   };
 
@@ -233,56 +269,60 @@ export default function Booking() {
         notes: state.notes.trim() || null,
       };
 
-      const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
-        .insert(bookingData)
-        .select()
-        .single();
+      let reference: string;
 
-      if (bookingError) throw bookingError;
+      if (isSupabaseConfigured) {
+        const { data: booking, error: bookingError } = await supabase
+          .from('bookings')
+          .insert(bookingData)
+          .select()
+          .single();
+        if (bookingError) throw bookingError;
+        reference = booking.reference;
 
-      // Insert booking_services
-      const bookingServices: BookingService[] = state.selectedServices.map((s) => ({
-        id: '',
-        booking_id: booking.id,
-        service_id: s.id,
-        service_name: s.name,
-        price: s.price_max,
-        duration_minutes: s.duration_minutes,
-      }));
+        const bsData = state.selectedServices.map((s) => ({
+          booking_id: booking.id,
+          service_id: s.id,
+          service_name: s.name,
+          price: s.price_max,
+          duration_minutes: s.duration_minutes,
+        }));
+        await supabase.from('booking_services').insert(bsData);
 
-      const bsData = bookingServices.map(({ id, ...rest }) => rest);
-      await supabase.from('booking_services').insert(bsData);
-
-      // Fire notification email (non-blocking — don't fail the booking if email fails)
-      try {
-        const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
-        await fetch(fnUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
-          body: JSON.stringify({
-            type: 'booking',
-            reference: booking.reference,
-            customer_name: state.customerName.trim(),
-            customer_email: state.customerEmail.trim(),
-            customer_phone: state.customerPhone.trim(),
-            service_mode: state.mode,
-            scheduled_at: scheduledAt.toISOString(),
-            duration_minutes: totalDuration + bufferMin,
-            total_price: grandTotal,
-            services: state.selectedServices.map((s) => s.name),
-            home_address: state.mode === 'home' ? state.homeAddress.trim() : null,
-            notes: state.notes.trim() || null,
-          }),
-        });
-      } catch {
-        // Email failure is non-critical — booking was saved successfully
+        // Fire notification email (non-blocking — don't fail the booking if email fails)
+        try {
+          const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
+          await fetch(fnUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+            body: JSON.stringify({
+              type: 'booking',
+          reference: reference,
+              customer_name: state.customerName.trim(),
+              customer_email: state.customerEmail.trim(),
+              customer_phone: state.customerPhone.trim(),
+              service_mode: state.mode,
+              scheduled_at: scheduledAt.toISOString(),
+              duration_minutes: totalDuration + bufferMin,
+              total_price: grandTotal,
+              services: state.selectedServices.map((s) => s.name),
+              home_address: state.mode === 'home' ? state.homeAddress.trim() : null,
+              notes: state.notes.trim() || null,
+            }),
+          });
+        } catch {
+          // Email failure is non-critical — booking was saved successfully
+        }
+      } else {
+        // Preview mode — simulate a saved booking so the flow is fully usable offline.
+        reference = 'FAR-' + Math.random().toString(36).slice(2, 10).toUpperCase();
+        await new Promise((r) => setTimeout(r, 700));
       }
 
       // Navigate to confirmation with reference
       navigate('/booking/confirmation', {
         state: {
-          reference: booking.reference,
+          reference: reference,
           name: state.customerName,
           services: state.selectedServices.map((s) => s.name),
           date: scheduledAt.toISOString(),
@@ -296,6 +336,8 @@ export default function Booking() {
       setStep('payment');
     }
   };
+
+  const hint = proceedHint();
 
   if (loading) {
     return (
@@ -314,6 +356,30 @@ export default function Booking() {
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display text-ink-900 leading-[1.1]">
             Book a session
           </h1>
+
+          {!isSupabaseConfigured && (
+            <div className="mt-4 inline-flex items-start gap-2 text-xs text-ink-600 bg-cream-200/70 border border-ink-200 px-3 py-2 max-w-xl">
+              <Info size={14} className="text-rose-500 mt-0.5 shrink-0" />
+              <span>
+                Preview mode — sample data is shown and bookings won’t be saved. Add your Supabase
+                credentials in <code className="font-mono">.env</code> to go live.
+              </span>
+            </div>
+          )}
+
+          {/* Live summary */}
+          {state.selectedServices.length > 0 && (
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-ink-600">
+              <span>
+                <span className="text-ink-900 font-display">{state.selectedServices.length}</span> service
+                {state.selectedServices.length > 1 ? 's' : ''} selected
+              </span>
+              <span className="capitalize">{state.mode === 'home' ? 'Home service' : 'In salon'}</span>
+              <span>
+                <span className="text-ink-900 font-display">{formatPrice(grandTotal, currency)}</span> total
+              </span>
+            </div>
+          )}
 
           {/* Progress indicator */}
           {step !== 'submitting' && (
@@ -581,6 +647,9 @@ export default function Booking() {
           )}
 
           {/* Navigation */}
+          {step !== 'submitting' && hint && (
+            <p className="mt-8 text-sm text-rose-600 text-center">{hint}</p>
+          )}
           {step !== 'submitting' && (
             <div className="mt-10 flex items-center justify-between">
               {stepIndex > 0 ? (
@@ -706,6 +775,13 @@ function CalendarPicker({ selectedDate, onSelect, businessHours }: {
 
   const isDisabled = (d: Date) => isPast(d) || isClosed(d);
 
+  const closedDays = businessHours
+    .filter((b) => b.is_closed)
+    .map((b) => DAY_NAMES[b.day_of_week]);
+  const closedNote = closedDays.length
+    ? `Strikethrough days are closed or in the past. We're closed on ${closedDays.join(', ')}.`
+    : 'Strikethrough days are closed or in the past.';
+
   return (
     <div className="bg-cream-100 border border-ink-100 p-5">
       <div className="flex items-center justify-between mb-5">
@@ -755,8 +831,8 @@ function CalendarPicker({ selectedDate, onSelect, businessHours }: {
           );
         })}
       </div>
-      <p className="text-xs text-ink-400 mt-3 flex items-center gap-1.5">
-        <Calendar size={12} /> Strikethrough days are closed or past. We're closed on Mondays.
+       <p className="text-xs text-ink-400 mt-3 flex items-center gap-1.5">
+        <Calendar size={12} /> {closedNote}
       </p>
     </div>
   );

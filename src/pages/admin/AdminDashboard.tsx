@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarDays, MessageSquare, Users, TrendingUp, ArrowRight, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatPrice, formatTime, formatRelative, DAY_NAMES } from '@/lib/utils';
+import { formatPrice, formatTime, formatRelative } from '@/lib/utils';
 import type { Booking, Inquiry, SettingsMap } from '@/types';
 import StatusBadge from '@/components/ui/StatusBadge';
 

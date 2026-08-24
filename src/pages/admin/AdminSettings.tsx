@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Save, Check } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { DAY_NAMES } from '@/lib/utils';
