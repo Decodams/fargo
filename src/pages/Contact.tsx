@@ -25,19 +25,20 @@ export default function Contact() {
   const facebook = getSetting(settings, 'facebook_url');
 
   useEffect(() => {
-    supabase
-      .from('products')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order')
-      .then(({ data }) => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order');
         setProducts(data && data.length ? data : FALLBACK_PRODUCTS);
         const productSlug = searchParams.get('product');
         if (productSlug) setSelectedProduct(productSlug);
-      })
-      .catch(() => {
+      } catch {
         setProducts(FALLBACK_PRODUCTS);
-      });
+      }
+    })();
   }, [searchParams]);
 
   const selectedProductObj = products.find((p) => p.slug === selectedProduct);

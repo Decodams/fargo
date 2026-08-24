@@ -4,8 +4,8 @@ import { ArrowRight, ArrowLeft, Check, Clock, Home as HomeIcon, Store, Calendar,
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
 import { getSetting, formatPrice, formatPriceRange, formatDuration, DAY_NAMES, DAY_SHORT, MONTH_NAMES } from '@/lib/utils';
-import type { Service, Staff, BusinessHour } from '@/types';
-import { FALLBACK_SERVICES, FALLBACK_STAFF, FALLBACK_BUSINESS_HOURS, withFallback } from '@/lib/fallbackData';
+import type { Service, Staff, BusinessHour, Category } from '@/types';
+import { FALLBACK_SERVICES, FALLBACK_STAFF, FALLBACK_BUSINESS_HOURS, FALLBACK_CATEGORIES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 
 type Step = 'service' | 'mode' | 'datetime' | 'details' | 'payment' | 'submitting';
@@ -40,6 +40,9 @@ export default function Booking() {
 
   const [step, setStep] = useState<Step>('service');
   const [services, setServices] = useState<Service[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [serviceCategory, setServiceCategory] = useState<string>('all');
+  const [servicePage, setServicePage] = useState(1);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
   const [existingBookings, setExistingBookings] = useState<string[]>([]);
@@ -66,10 +69,11 @@ export default function Booking() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: svcs }, { data: stf }, { data: bh }] = await Promise.all([
+      const [{ data: svcs }, { data: stf }, { data: bh }, { data: cats }] = await Promise.all([
         supabase.from('services').select('*').eq('is_active', true).order('display_order'),
         supabase.from('staff').select('*').eq('is_active', true).order('display_order'),
         supabase.from('business_hours').select('*').order('day_of_week'),
+        supabase.from('categories').select('*').order('display_order'),
       ]);
 
       // Fall back to curated offline data when the backend is empty / unconfigured
@@ -77,8 +81,10 @@ export default function Booking() {
       const resolvedServices = withFallback(svcs as Service[] | null, FALLBACK_SERVICES);
       const resolvedStaff = withFallback(stf as Staff[] | null, FALLBACK_STAFF);
       const resolvedHours = withFallback(bh as BusinessHour[] | null, FALLBACK_BUSINESS_HOURS);
+      const resolvedCategories = withFallback(cats as Category[] | null, FALLBACK_CATEGORIES);
 
       setServices(resolvedServices);
+      setCategories(resolvedCategories);
       setStaff(resolvedStaff);
       setBusinessHours(resolvedHours);
       setLoading(false);
@@ -109,13 +115,14 @@ export default function Booking() {
     const end = new Date(state.date);
     end.setHours(23, 59, 59, 999);
 
-    supabase
-      .from('bookings')
-      .select('scheduled_at,duration_minutes,staff_id')
-      .in('status', ['confirmed', 'pending'])
-      .gte('scheduled_at', start.toISOString())
-      .lte('scheduled_at', end.toISOString())
-      .then(({ data }) => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('bookings')
+          .select('scheduled_at,duration_minutes,staff_id')
+          .in('status', ['confirmed', 'pending'])
+          .gte('scheduled_at', start.toISOString())
+          .lte('scheduled_at', end.toISOString());
         if (!data) {
           setExistingBookings([]);
           return;
@@ -136,15 +143,27 @@ export default function Booking() {
           }
         });
         setExistingBookings([...new Set(slots)]);
-      })
-      .catch(() => {
+      } catch {
         setExistingBookings([]);
-      });
+      }
+    })();
   }, [state.date, state.staffId]);
 
   const totalDuration = state.selectedServices.reduce((sum, s) => sum + s.duration_minutes, 0);
   const serviceTotal = state.selectedServices.reduce((sum, s) => sum + s.price_max, 0);
   const grandTotal = state.mode === 'home' ? serviceTotal + homeFee : serviceTotal;
+
+  // Service selection: filter by category, paginate (max 7 per page)
+  const SERVICES_PER_PAGE = 7;
+  const filteredServices = serviceCategory === 'all'
+    ? services
+    : services.filter((s) => s.category_id === serviceCategory);
+  const totalServicePages = Math.max(1, Math.ceil(filteredServices.length / SERVICES_PER_PAGE));
+  const safeServicePage = Math.min(servicePage, totalServicePages);
+  const pageServices = filteredServices.slice(
+    (safeServicePage - 1) * SERVICES_PER_PAGE,
+    safeServicePage * SERVICES_PER_PAGE,
+  );
 
   const update = useCallback((patch: Partial<BookingState>) => {
     setState((prev) => ({ ...prev, ...patch }));
@@ -347,8 +366,24 @@ export default function Booking() {
       <div className="pt-32 pb-20 min-h-screen bg-cream-50 flex items-center justify-center">
         <Loader2 size={32} className="animate-spin text-ink-400" />
       </div>
-    );
-  }
+);
+}
+
+/* Filter chip component for service category pagination */
+type FilterChipProps = { active: boolean; onClick: () => void; children: React.ReactNode };
+
+function FilterChip({ active, onClick, children }: FilterChipProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1.5 text-xs capitalize rounded text-ink-600 transition-colors ${
+        active ? 'bg-ink-900 text-cream-50' : 'border-ink-200 text-ink-400 hover:border-ink-900'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
 
   return (
     <>
@@ -412,9 +447,31 @@ export default function Booking() {
           {/* Step: Service selection */}
           {step === 'service' && (
             <Reveal>
-              <h2 className="text-xl font-display text-ink-900 mb-6">Choose your services</h2>
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+                <h2 className="text-xl font-display text-ink-900">Choose your services</h2>
+                <p className="text-sm text-ink-500">
+                  {filteredServices.length} service{filteredServices.length === 1 ? '' : 's'}
+                </p>
+              </div>
+
+              {/* Category filter */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <FilterChip active={serviceCategory === 'all'} onClick={() => { setServiceCategory('all'); setServicePage(1); }}>
+                  All
+                </FilterChip>
+                {categories.map((c) => (
+                  <FilterChip
+                    key={c.id}
+                    active={serviceCategory === c.id}
+                    onClick={() => { setServiceCategory(c.id); setServicePage(1); }}
+                  >
+                    {c.name}
+                  </FilterChip>
+                ))}
+              </div>
+
               <div className="space-y-3">
-                {services.map((service) => {
+                {pageServices.map((service) => {
                   const selected = state.selectedServices.find((s) => s.id === service.id);
                   return (
                     <button
@@ -424,15 +481,15 @@ export default function Booking() {
                         selected ? 'border-ink-900 bg-cream-100' : 'border-ink-100 bg-cream-50 hover:border-ink-300'
                       }`}
                     >
-                      <div className="flex items-start gap-4 flex-1">
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
                         <div className={`w-6 h-6 flex items-center justify-center border shrink-0 mt-0.5 transition-colors ${
                           selected ? 'bg-ink-900 border-ink-900 text-cream-50' : 'border-ink-300'
                         }`}>
                           {selected && <Check size={14} />}
                         </div>
-                        <div>
-                          <h3 className="text-base font-display text-ink-900">{service.name}</h3>
-                          <div className="flex items-center gap-4 mt-1 text-xs text-ink-500">
+                        <div className="min-w-0">
+                          <h3 className="text-base font-display text-ink-900 truncate">{service.name}</h3>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-ink-500">
                             <span className="flex items-center gap-1"><Clock size={12} /> {formatDuration(service.duration_minutes)}</span>
                             <span>{formatPriceRange(service.price_min, service.price_max, currency)}</span>
                             {service.home_service_eligible && <span className="flex items-center gap-1 text-olive-600"><HomeIcon size={12} /> Home</span>}
@@ -443,6 +500,42 @@ export default function Booking() {
                   );
                 })}
               </div>
+
+              {/* Pagination */}
+              {totalServicePages > 1 && (
+                <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
+                  <p className="text-xs text-ink-400">
+                    Page {safeServicePage} of {totalServicePages}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setServicePage((p) => Math.max(1, p - 1))}
+                      disabled={safeServicePage === 1}
+                      className="px-3 py-2 text-sm border border-ink-200 text-ink-600 disabled:opacity-40 hover:border-ink-900 disabled:hover:border-ink-200 transition-colors"
+                    >
+                      Prev
+                    </button>
+                    {Array.from({ length: totalServicePages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setServicePage(p)}
+                        className={`w-9 h-9 text-sm border transition-colors ${
+                          safeServicePage === p ? 'bg-ink-900 text-cream-50 border-ink-900' : 'border-ink-200 text-ink-600 hover:border-ink-900'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setServicePage((p) => Math.min(totalServicePages, p + 1))}
+                      disabled={safeServicePage === totalServicePages}
+                      className="px-3 py-2 text-sm border border-ink-200 text-ink-600 disabled:opacity-40 hover:border-ink-900 disabled:hover:border-ink-200 transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </Reveal>
           )}
 

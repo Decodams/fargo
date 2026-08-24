@@ -129,8 +129,8 @@ export default function ServiceDetail() {
       {/* Breadcrumb */}
       <div className="pt-28 bg-cream-50">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-4">
-          <Link to="/services" className="inline-flex items-center gap-2 text-sm text-ink-500 hover:text-ink-900 transition-colors">
-            <ArrowLeft size={15} /> All Services
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-ink-500 hover:text-ink-900 transition-colors">
+            <ArrowLeft size={15} /> Home
           </Link>
         </div>
       </div>

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import type { BusinessHour } from '@/types';
+import { DAY_SHORT } from '@/lib/utils';
 
 /**
  * Reveals an element on scroll by adding the `visible` class
@@ -59,4 +61,40 @@ export function useSettings() {
   }, []);
 
   return { settings, loading };
+}
+
+function formatHourTime(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+export function useBusinessHours() {
+  const [hours, setHours] = useState<BusinessHour[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data } = await supabase.from('business_hours').select('*').order('day_of_week');
+        if (active && data) setHours(data as BusinessHour[]);
+      } catch {
+        // empty
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const openDays = hours.filter((h) => !h.is_closed);
+  const summaryLines = openDays.map(
+    (h) => `${DAY_SHORT[h.day_of_week]} ${formatHourTime(h.open_time)}–${formatHourTime(h.close_time)}`
+  );
+
+  return { hours, loading, summaryLines, openDays };
 }
