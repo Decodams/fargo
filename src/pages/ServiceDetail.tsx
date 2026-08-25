@@ -7,6 +7,7 @@ import { IMAGES } from '@/lib/images';
 import type { Service, Category, Staff } from '@/types';
 import { FALLBACK_SERVICES, FALLBACK_CATEGORIES, FALLBACK_STAFF } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
+import PageMeta from '@/components/ui/PageMeta';
 
 const SERVICE_IMAGES: Record<string, string> = {
   'hair-styling-blow-dry': IMAGES.hairStyling,
@@ -126,6 +127,11 @@ export default function ServiceDetail() {
 
   return (
     <>
+      <PageMeta
+        title={service.name}
+        description={service.description || `${service.name} at Fargo Unisex Salon & Spa. ${formatPriceRange(service.price_min, service.price_max)} — ${formatDuration(service.duration_minutes)}.`}
+        path={`/services/${service.slug}`}
+      />
       {/* Breadcrumb */}
       <div className="pt-28 bg-cream-50">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-4">

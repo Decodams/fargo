@@ -37,6 +37,14 @@ export default function BookingConfirmation() {
     return <Navigate to="/" replace />;
   }
 
+  // Noindex this transactional page
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (meta) { meta.content = 'noindex'; } else {
+      const el = document.createElement('meta'); el.name = 'robots'; el.content = 'noindex'; document.head.appendChild(el);
+    }
+  }, []);
+
   // Determine the effective confirmation status: live DB value > navigate state
   const effectiveStatus = liveStatus ?? navigateState.confirmation_status;
   const isPending = effectiveStatus === 'pending';

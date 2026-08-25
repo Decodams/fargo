@@ -29,6 +29,7 @@ const AdminSEO = lazy(() => import('@/pages/admin/AdminSEO'));
 const AdminCategories = lazy(() => import('@/pages/admin/AdminCategories'));
 const AdminFAQ = lazy(() => import('@/pages/admin/AdminFAQ'));
 const AdminStaff = lazy(() => import('@/pages/admin/AdminStaff'));
+const AdminPricing = lazy(() => import('@/pages/admin/AdminPricing'));
 
 function PageLoader() {
   return (
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="products" element={<AdminProducts />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="pricing" element={<AdminPricing />} />
             <Route path="content" element={<AdminContent />} />
             <Route path="seo" element={<AdminSEO />} />
             <Route path="categories" element={<AdminCategories />} />

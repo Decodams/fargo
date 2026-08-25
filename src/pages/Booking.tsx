@@ -4,7 +4,7 @@ import { ArrowRight, ArrowLeft, Check, Clock, Home as HomeIcon, Store, Calendar,
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
 import { getSetting, formatPrice, formatPriceRange, formatDuration, DAY_NAMES, DAY_SHORT, MONTH_NAMES } from '@/lib/utils';
-import type { Service, Staff, BusinessHour, Category } from '@/types';
+import type { Service, Staff, BusinessHour, Category, DistanceZone } from '@/types';
 import { FALLBACK_SERVICES, FALLBACK_STAFF, FALLBACK_BUSINESS_HOURS, FALLBACK_CATEGORIES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 import PageMeta from '@/components/ui/PageMeta';
@@ -24,6 +24,8 @@ interface BookingState {
   homeAddress: string;
   notes: string;
   prepay: boolean;
+  partySize: number;
+  distanceZoneId: string | null;
 }
 
 const STEPS: { key: Step; label: string }[] = [
@@ -47,6 +49,7 @@ export default function Booking() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
   const [existingBookings, setExistingBookings] = useState<string[]>([]);
+  const [distanceZones, setDistanceZones] = useState<DistanceZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitError, setSubmitError] = useState('');
 
@@ -62,6 +65,8 @@ export default function Booking() {
     homeAddress: '',
     notes: '',
     prepay: false,
+    partySize: 1,
+    distanceZoneId: null,
   });
 
   const bankName = getSetting(settings, 'bank_name') || 'Moniepoint';
@@ -69,16 +74,16 @@ export default function Booking() {
   const accountName = getSetting(settings, 'account_name') || 'Fargo Unisex Salon and Spa';
 
   const currency = getSetting(settings, 'currency_symbol');
-  const homeFee = Number(getSetting(settings, 'home_service_fee')) || 2000;
   const bufferMin = Number(getSetting(settings, 'buffer_time_minutes')) || 15;
 
   useEffect(() => {
     (async () => {
-      const [{ data: svcs }, { data: stf }, { data: bh }, { data: cats }] = await Promise.all([
+      const [{ data: svcs }, { data: stf }, { data: bh }, { data: cats }, { data: zones }] = await Promise.all([
         supabase.from('services').select('*').eq('is_active', true).order('display_order'),
         supabase.from('staff').select('*').eq('is_active', true).order('display_order'),
         supabase.from('business_hours').select('*').order('day_of_week'),
         supabase.from('categories').select('*').order('display_order'),
+        supabase.from('distance_zones').select('*').eq('is_active', true).order('display_order'),
       ]);
 
       // Fall back to curated offline data when the backend is empty / unconfigured
@@ -92,6 +97,7 @@ export default function Booking() {
       setCategories(resolvedCategories);
       setStaff(resolvedStaff);
       setBusinessHours(resolvedHours);
+      setDistanceZones((zones ?? []) as DistanceZone[]);
       setLoading(false);
 
       // Pre-select service from URL
@@ -155,8 +161,33 @@ export default function Booking() {
   }, [state.date, state.staffId]);
 
   const totalDuration = state.selectedServices.reduce((sum, s) => sum + s.duration_minutes, 0);
-  const serviceTotal = state.selectedServices.reduce((sum, s) => sum + s.price_max, 0);
-  const grandTotal = state.mode === 'home' ? serviceTotal + homeFee : serviceTotal;
+
+  // Pricing calculations
+  const multiServiceEnabled = getSetting(settings, 'multi_service_enabled') === 'true';
+  const multiServiceMin = Number(getSetting(settings, 'multi_service_min_services')) || 3;
+  const multiServiceDiscount = Number(getSetting(settings, 'multi_service_discount_percent')) || 10;
+  const perPersonEnabled = getSetting(settings, 'per_person_enabled') === 'true';
+
+  // Per-person: multiply price for services with per_person=true
+  const serviceTotal = state.selectedServices.reduce((sum, s) => {
+    const unitPrice = s.price_max;
+    if (perPersonEnabled && s.per_person) {
+      return sum + unitPrice * state.partySize;
+    }
+    return sum + unitPrice;
+  }, 0);
+
+  // Travel fee from distance zone
+  const selectedZone = distanceZones.find((z) => z.id === state.distanceZoneId);
+  const travelFee = state.mode === 'home' && selectedZone ? selectedZone.fee : 0;
+
+  // Multi-service discount
+  let discountAmount = 0;
+  if (multiServiceEnabled && state.selectedServices.length >= multiServiceMin) {
+    discountAmount = Math.round((serviceTotal * multiServiceDiscount) / 100);
+  }
+
+  const grandTotal = serviceTotal + travelFee - discountAmount;
 
   // Service selection: filter by category, paginate (max 7 per page)
   const SERVICES_PER_PAGE = 7;
@@ -288,10 +319,14 @@ export default function Booking() {
         customer_phone: state.customerPhone.trim(),
         service_mode: state.mode,
         home_address: state.mode === 'home' ? state.homeAddress.trim() : null,
+        distance_zone_id: state.mode === 'home' ? state.distanceZoneId : null,
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: totalDuration + bufferMin,
         total_price: grandTotal,
-        payment_status: state.prepay ? 'prepaid' : 'postpaid',
+        travel_fee: travelFee,
+        discount_amount: discountAmount,
+        party_size: state.partySize,
+        payment_status: state.prepay ? 'prepaid' : 'unpaid',
         confirmation_status: state.prepay ? 'pending' : 'confirmed',
         status: 'pending',
         notes: state.notes.trim() || null,
@@ -313,6 +348,7 @@ export default function Booking() {
           service_id: s.id,
           service_name: s.name,
           price: s.price_max,
+          quantity: (perPersonEnabled && s.per_person) ? state.partySize : 1,
           duration_minutes: s.duration_minutes,
         }));
         await supabase.from('booking_services').insert(bsData);
@@ -357,6 +393,9 @@ export default function Booking() {
           date: scheduledAt.toISOString(),
           mode: state.mode,
           total: grandTotal,
+          travel_fee: travelFee,
+          discount_amount: discountAmount,
+          party_size: state.partySize,
           prepay: state.prepay,
           confirmation_status: state.prepay ? 'pending' : 'confirmed',
           customer_email: state.customerEmail,
@@ -675,6 +714,27 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
                       className="input-field resize-none" placeholder="Full address for home service" />
                   </div>
                 )}
+                {state.mode === 'home' && distanceZones.length > 0 && (
+                  <div>
+                    <label className="label-text" htmlFor="bk-zone">Distance Zone</label>
+                    <select id="bk-zone" value={state.distanceZoneId ?? ''} onChange={(e) => update({ distanceZoneId: e.target.value || null })} className="input-field">
+                      <option value="">Select your distance zone</option>
+                      {distanceZones.map((z) => (
+                        <option key={z.id} value={z.id}>{z.name} — {z.fee > 0 ? formatPrice(z.fee, currency) : 'Free'}</option>
+                      ))}
+                    </select>
+                    <p className="mt-1.5 text-xs text-ink-400">Helps us calculate the travel fee for your location.</p>
+                  </div>
+                )}
+                {perPersonEnabled && state.selectedServices.some((s) => s.per_person) && (
+                  <div>
+                    <label className="label-text" htmlFor="bk-party">Number of Persons</label>
+                    <input id="bk-party" type="number" min={1} max={Number(getSetting(settings, 'per_person_max')) || 10} value={state.partySize}
+                      onChange={(e) => update({ partySize: Math.max(1, Number(e.target.value) || 1) })}
+                      className="input-field" />
+                    <p className="mt-1.5 text-xs text-ink-400">Some of your selected services are priced per person.</p>
+                  </div>
+                )}
                 <div>
                   <label className="label-text" htmlFor="bk-notes">Notes (optional)</label>
                   <textarea id="bk-notes" rows={3} value={state.notes}
@@ -734,14 +794,29 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
                 <div className="space-y-3 text-sm">
                   {state.selectedServices.map((s) => (
                     <div key={s.id} className="flex justify-between">
-                      <span className="text-cream-100">{s.name}</span>
-                      <span className="text-ink-300">{formatPriceRange(s.price_min, s.price_max, currency)}</span>
+                      <span className="text-cream-100">
+                        {s.name}
+                        {perPersonEnabled && s.per_person && state.partySize > 1 && (
+                          <span className="text-ink-400 text-xs ml-1">x{state.partySize}</span>
+                        )}
+                      </span>
+                      <span className="text-ink-300">
+                        {perPersonEnabled && s.per_person
+                          ? formatPrice(s.price_max * state.partySize, currency)
+                          : formatPriceRange(s.price_min, s.price_max, currency)}
+                      </span>
                     </div>
                   ))}
-                  {state.mode === 'home' && (
+                  {state.mode === 'home' && travelFee > 0 && (
                     <div className="flex justify-between text-ink-300">
-                      <span>Home service callout</span>
-                      <span>{formatPrice(homeFee, currency)}</span>
+                      <span>Travel fee{selectedZone ? ` (${selectedZone.name})` : ''}</span>
+                      <span>{formatPrice(travelFee, currency)}</span>
+                    </div>
+                  )}
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-olive-400">
+                      <span>Multi-service discount ({multiServiceDiscount}%)</span>
+                      <span>-{formatPrice(discountAmount, currency)}</span>
                     </div>
                   )}
                   <div className="flex justify-between pt-3 border-t border-ink-700">

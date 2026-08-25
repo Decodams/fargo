@@ -12,9 +12,26 @@ export default function FAQ() {
   const { settings } = useSettings();
   const sections = getFaqSections(settings);
 
+  // FAQPage structured data for Google rich results
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: sections.flatMap((section) =>
+      section.items.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.a,
+        },
+      }))
+    ),
+  };
+
   return (
     <>
       <PageMeta title="FAQ & Policies" description="Frequently asked questions about booking, home services, payments, and cancellation policies at Fargo Unisex Salon & Spa." path="/faq" />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
       {/* Header */}
       <section className="pt-32 pb-12 lg:pt-40 lg:pb-16 bg-cream-100 border-b border-ink-100">

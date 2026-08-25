@@ -15,6 +15,7 @@ export interface Service {
   price_min: number;
   price_max: number;
   home_service_eligible: boolean;
+  per_person: boolean;
   is_active: boolean;
   display_order: number;
   category?: Category | null;
@@ -58,10 +59,14 @@ export interface Booking {
   customer_phone: string;
   service_mode: 'in_salon' | 'home';
   home_address: string | null;
+  distance_zone_id: string | null;
   scheduled_at: string;
   duration_minutes: number;
   total_price: number;
-  payment_status: 'unpaid' | 'paid' | 'failed' | 'refunded';
+  travel_fee: number;
+  discount_amount: number;
+  party_size: number;
+  payment_status: 'unpaid' | 'paid' | 'prepaid' | 'postpaid' | 'failed' | 'refunded';
   payment_reference: string | null;
   payment_amount: number | null;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
@@ -71,6 +76,7 @@ export interface Booking {
   updated_at: string;
   staff?: Staff | null;
   booking_services?: BookingService[];
+  distance_zone?: DistanceZone | null;
 }
 
 export interface BookingService {
@@ -79,6 +85,7 @@ export interface BookingService {
   service_id: string | null;
   service_name: string;
   price: number;
+  quantity: number;
   duration_minutes: number;
 }
 
@@ -121,3 +128,13 @@ export interface Customer {
 }
 
 export type SettingsMap = Record<string, string>;
+
+export interface DistanceZone {
+  id: string;
+  name: string;
+  min_km: number;
+  max_km: number | null;
+  fee: number;
+  is_active: boolean;
+  display_order: number;
+}

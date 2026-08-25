@@ -14,13 +14,14 @@ interface EditState {
   price_min: number;
   price_max: number;
   home_service_eligible: boolean;
+  per_person: boolean;
   is_active: boolean;
   display_order: number;
 }
 
 const EMPTY: EditState = {
   name: '', slug: '', description: '', category_id: '', duration_minutes: 60,
-  price_min: 0, price_max: 0, home_service_eligible: false, is_active: true, display_order: 0,
+  price_min: 0, price_max: 0, home_service_eligible: false, per_person: false, is_active: true, display_order: 0,
 };
 
 export default function AdminServices() {
@@ -58,6 +59,7 @@ export default function AdminServices() {
         price_min: Number(editing.price_min),
         price_max: Number(editing.price_max),
         home_service_eligible: editing.home_service_eligible,
+        per_person: editing.per_person,
         is_active: editing.is_active,
         display_order: Number(editing.display_order),
       };
@@ -89,8 +91,8 @@ export default function AdminServices() {
       id: svc.id, name: svc.name, slug: svc.slug, description: svc.description ?? '',
       category_id: svc.category_id ?? '', duration_minutes: svc.duration_minutes,
       price_min: svc.price_min, price_max: svc.price_max,
-      home_service_eligible: svc.home_service_eligible, is_active: svc.is_active,
-      display_order: svc.display_order,
+      home_service_eligible: svc.home_service_eligible, per_person: svc.per_person,
+      is_active: svc.is_active, display_order: svc.display_order,
     });
   };
 
@@ -191,6 +193,10 @@ export default function AdminServices() {
                   <label className="flex items-center gap-2 text-sm text-ink-700">
                     <input type="checkbox" checked={editing.home_service_eligible} onChange={(e) => setEditing({ ...editing, home_service_eligible: e.target.checked })} />
                     Home service
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-ink-700">
+                    <input type="checkbox" checked={editing.per_person} onChange={(e) => setEditing({ ...editing, per_person: e.target.checked })} />
+                    Per person
                   </label>
                   <label className="flex items-center gap-2 text-sm text-ink-700">
                     <input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} />

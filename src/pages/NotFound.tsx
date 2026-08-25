@@ -1,6 +1,20 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function NotFound() {
+  useEffect(() => {
+    document.title = 'Page Not Found — Fargo Salon & Spa';
+    const meta = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (meta) {
+      meta.content = 'noindex';
+    } else {
+      const el = document.createElement('meta');
+      el.name = 'robots';
+      el.content = 'noindex';
+      document.head.appendChild(el);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream-50 px-5">
       <div className="text-center">
