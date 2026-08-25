@@ -6,6 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/types';
 import { FALLBACK_PRODUCTS, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
+import PageMeta from '@/components/ui/PageMeta';
 
 const PRODUCT_IMAGES: Record<string, string> = {
   'hair-dye-black': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
@@ -54,6 +55,8 @@ export default function Products() {
 
   return (
     <>
+      <PageMeta title="Products" description="Hair, skin, and styling products we trust at Fargo Unisex Salon & Spa. Inquire about availability." path="/products" />
+
       {/* Header */}
       <section className="pt-32 pb-12 lg:pt-40 lg:pb-16 bg-cream-100 border-b border-ink-100">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
@@ -134,6 +137,7 @@ export default function Products() {
                       <img
                         src={PRODUCT_IMAGES[product.slug] ?? product.image_url ?? IMAGES_PLACEHOLDER}
                         alt={product.name}
+                        loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     </div>

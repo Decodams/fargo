@@ -7,6 +7,7 @@ import type { Staff } from '@/types';
 import { FALLBACK_STAFF, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 import SectionHeading from '@/components/ui/SectionHeading';
+import PageMeta from '@/components/ui/PageMeta';
 
 export default function About() {
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -22,6 +23,8 @@ export default function About() {
 
   return (
     <>
+      <PageMeta title="About" description="Meet the team behind Fargo Unisex Salon & Spa. Our story, values, and the specialists who make it happen." path="/about" />
+
       {/* Hero — editorial split */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 bg-cream-50">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">

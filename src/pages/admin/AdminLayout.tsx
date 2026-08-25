@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Outlet, NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, CalendarDays, MessageSquare, Scissors, Package, Users, Settings, LogOut, Menu, X, Search, Folder, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -23,31 +23,6 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        navigate('/admin/login', { replace: true });
-      } else {
-        setCheckingAuth(false);
-      }
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        navigate('/admin/login', { replace: true });
-      }
-    });
-    return () => listener.subscription.unsubscribe();
-  }, [navigate]);
-
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen bg-cream-50 flex items-center justify-center">
-        <p className="text-ink-500 text-sm tracking-wider uppercase">Verifying access…</p>
-      </div>
-    );
-  }
 
   const currentLabel = NAV.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to) && n.to !== '/admin'))?.label ?? 'Overview';
 

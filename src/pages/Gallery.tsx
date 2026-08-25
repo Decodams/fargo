@@ -1,40 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
-import { IMAGES } from '@/lib/images';
 import Reveal from '@/components/ui/Reveal';
-
-interface GalleryItem {
-  src: string;
-  alt: string;
-  category: 'Hair' | 'Spa' | 'Nails' | 'Space';
-  span?: boolean;
-}
-
-const GALLERY: GalleryItem[] = [
-  { src: IMAGES.hairStyling, alt: 'Bridal hair styling with curling iron', category: 'Hair', span: true },
-  { src: IMAGES.braiding, alt: 'Braiding session in salon', category: 'Hair' },
-  { src: IMAGES.facial, alt: 'Facial treatment close-up', category: 'Spa' },
-  { src: IMAGES.manicure, alt: 'Manicure with nail polish application', category: 'Nails' },
-  { src: IMAGES.salonInterior, alt: 'Salon interior with modern furniture', category: 'Space', span: true },
-  { src: IMAGES.braidedPortrait, alt: 'Intricate braided hairstyle portrait', category: 'Hair' },
-  { src: IMAGES.spaMassage2, alt: 'Back massage in spa setting', category: 'Spa' },
-  { src: IMAGES.barber, alt: 'Barber giving a precision haircut', category: 'Hair' },
-  { src: IMAGES.nailPolish, alt: 'Selecting nail polish colors', category: 'Nails' },
-  { src: IMAGES.salonChair, alt: 'Salon chair and mirror', category: 'Space' },
-  { src: IMAGES.facialMask, alt: 'Facial mask application', category: 'Spa' },
-  { src: IMAGES.bridalHair, alt: 'Bridal hair with floral accessories', category: 'Hair', span: true },
-];
+import PageMeta from '@/components/ui/PageMeta';
+import { useSettings } from '@/lib/hooks';
+import { getGalleryItems } from '@/lib/content';
 
 const FILTERS = ['All', 'Hair', 'Spa', 'Nails', 'Space'] as const;
 
 export default function Gallery() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('All');
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const { settings } = useSettings();
+  const allItems = getGalleryItems(settings);
 
-  const items = filter === 'All' ? GALLERY : GALLERY.filter((g) => g.category === filter);
+  const items = filter === 'All' ? allItems : allItems.filter((g) => g.category === filter);
+
+  const closeLightbox = useCallback(() => setLightbox(null), []);
+
+  useEffect(() => {
+    if (lightbox === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') setLightbox((i) => i !== null ? Math.max(0, i - 1) : null);
+      if (e.key === 'ArrowRight') setLightbox((i) => i !== null ? Math.min(items.length - 1, i + 1) : null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightbox, items.length, closeLightbox]);
 
   return (
     <>
+      <PageMeta title="Gallery" description="Work, atmosphere, and moments from the chair at Fargo Unisex Salon & Spa." path="/gallery" />
+
       {/* Header */}
       <section className="pt-32 pb-12 lg:pt-40 lg:pb-16 bg-cream-100 border-b border-ink-100">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
@@ -79,6 +76,7 @@ export default function Gallery() {
                   <img
                     src={item.src}
                     alt={item.alt}
+                    loading="lazy"
                     className={`w-full object-cover transition-transform duration-700 group-hover:scale-105 ${
                       item.span ? 'h-full min-h-[300px] lg:min-h-[400px]' : 'h-48 lg:h-64'
                     }`}
@@ -98,11 +96,11 @@ export default function Gallery() {
       {lightbox !== null && items[lightbox] && (
         <div
           className="fixed inset-0 z-[100] bg-ink-900/90 flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => setLightbox(null)}
+          onClick={closeLightbox}
         >
           <button
             className="absolute top-5 right-5 text-cream-50 hover:text-rose-400 transition-colors"
-            onClick={() => setLightbox(null)}
+            onClick={closeLightbox}
             aria-label="Close"
           >
             <X size={28} />
@@ -118,6 +116,7 @@ export default function Gallery() {
           <img
             src={items[lightbox].src}
             alt={items[lightbox].alt}
+            loading="lazy"
             className="max-w-full max-h-[85vh] object-contain"
             onClick={(e) => e.stopPropagation()}
           />

@@ -2,16 +2,18 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Home as HomeIcon, MapPin, Clock, Car } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
-import { useSettings } from '@/lib/hooks';
+import { useSettings, useBusinessHours } from '@/lib/hooks';
 import { getSetting, formatPrice, formatPriceRange, formatDuration } from '@/lib/utils';
 import type { Service } from '@/types';
 import { IMAGES } from '@/lib/images';
 import { FALLBACK_SERVICES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 import SectionHeading from '@/components/ui/SectionHeading';
+import PageMeta from '@/components/ui/PageMeta';
 
 export default function HomeServices() {
   const { settings } = useSettings();
+  const { summaryLines } = useBusinessHours();
   const [homeServices, setHomeServices] = useState<Service[]>([]);
 
   useEffect(() => {
@@ -32,6 +34,8 @@ export default function HomeServices() {
 
   return (
     <>
+      <PageMeta title="Home Service" description="Fargo brings salon services to your home. Same specialists, same standards, delivered to your door." path="/home-services" />
+
       {/* Hero — full bleed image with text overlay */}
       <section className="relative min-h-[60vh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
@@ -105,7 +109,7 @@ export default function HomeServices() {
             <Clock size={22} className="text-rose-400 shrink-0 mt-1" />
             <div>
               <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-1">Available Hours</p>
-              <p className="text-cream-100 text-sm">Tue–Sat 9am–7pm, Sun 12pm–6pm</p>
+              <p className="text-cream-100 text-sm">{summaryLines.length > 0 ? summaryLines.join(', ') : 'Tue–Sat 9am–7pm, Sun 12pm–6pm'}</p>
             </div>
           </div>
         </div>

@@ -106,10 +106,17 @@
 /* Hero accent */
 .hero-accent {
   margin-top: 0.75rem;
-  color: ink-600;
-  font-size: 0.875rem;
-  text-transform: uppercase;
+  @apply text-ink-600 text-sm uppercase;
   letter-spacing: 0.08em;
+}
+
+/* Fade-in keyframe for lightbox etc */
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
 }
 
 /* Slightly heavier card borders */

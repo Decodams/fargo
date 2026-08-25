@@ -1,22 +1,29 @@
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, Navigate } from 'react-router-dom';
 import { CheckCircle, Clock, ArrowRight, Download, MapPin, Phone, Mail } from 'lucide-react';
 import { useBookingTicket } from '@/components/ui/BookingTicketPDF';
-import { getSetting } from '@/lib/utils';
 import { useSettings } from '@/lib/hooks';
+import { getSetting } from '@/lib/utils';
 
 export default function BookingConfirmation() {
   const { state } = useLocation();
   const { settings } = useSettings();
-  const { reference, name, services, date, mode, total, prepay, confirmation_status } = state || {};
+  const { reference, name, services, date, mode, total, prepay, confirmation_status, customer_email } = state || {};
 
   const { generatePDF } = useBookingTicket();
+
+  if (!state || !reference) {
+    return <Navigate to="/booking" replace />;
+  }
 
   const formattedDate = new Date(date).toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
   const formattedTime = new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const isPending = confirmation_status === 'pending' || (prepay && !confirmation_status);
+  const isPending = confirmation_status === 'pending';
   const currency = getSetting(settings, 'currency_symbol') || '₦';
+  const phone = getSetting(settings, 'contact_phone') || '09012101020';
+  const email = getSetting(settings, 'contact_email') || 'Fargounisexsalon@gmail.com';
+  const address = getSetting(settings, 'address') || 'No 8 Dr Billy Okoye Boulevard By Revenue House/Immigration Awka Anambra State';
 
   return (
     <div className="min-h-screen bg-cream-50 flex items-center justify-center px-5 py-20">
@@ -67,14 +74,14 @@ export default function BookingConfirmation() {
 
             <div className="bg-amber-50 border border-amber-200 p-4 mb-8 text-sm text-amber-800">
               <p className="font-medium mb-1">What happens next?</p>
-              <p className="text-amber-700">Our team will verify your bank transfer and confirm your booking. 
-              You'll receive an email at <strong>{state?.customer_email || 'your email'}</strong> once confirmed.</p>
+              <p className="text-amber-700">Our team will verify your bank transfer and confirm your booking.
+              You'll receive an email at <strong>{customer_email || 'your email'}</strong> once confirmed.</p>
             </div>
 
             <p className="text-xs text-ink-400 mb-6">
               Questions? Contact us at{' '}
-              <a href="mailto:Fargounisexsalon@gmail.com" className="text-rose-500 hover:underline">Fargounisexsalon@gmail.com</a>
-              {' '}or call <a href="tel:09012101020" className="text-rose-500 hover:underline">09012101020</a>
+              <a href={`mailto:${email}`} className="text-rose-500 hover:underline">{email}</a>
+              {' '}or call <a href={`tel:${phone}`} className="text-rose-500 hover:underline">{phone}</a>
             </p>
 
             <Link
@@ -92,7 +99,6 @@ export default function BookingConfirmation() {
             <h1 className="text-3xl font-display text-ink-900 mb-3">Booking Confirmed</h1>
             <p className="text-ink-600 mb-8">Your booking is confirmed. A confirmation email has been sent.</p>
 
-            {/* Booking Ticket */}
             <div className="bg-ink-900 text-cream-100 p-6 sm:p-8 text-left mb-6">
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-ink-700">
                 <div>
@@ -138,9 +144,9 @@ export default function BookingConfirmation() {
               </div>
 
               <div className="border-t border-ink-700 pt-4 text-xs text-ink-400 space-y-1">
-                <div className="flex items-center gap-2"><MapPin size={12} /> No 8 Dr Billy Okoye Boulevard By Revenue House/Immigration Awka Anambra State</div>
-                <div className="flex items-center gap-2"><Phone size={12} /> 09012101020</div>
-                <div className="flex items-center gap-2"><Mail size={12} /> Fargounisexsalon@gmail.com</div>
+                <div className="flex items-center gap-2"><MapPin size={12} /> {address}</div>
+                <div className="flex items-center gap-2"><Phone size={12} /> {phone}</div>
+                <div className="flex items-center gap-2"><Mail size={12} /> {email}</div>
               </div>
             </div>
 

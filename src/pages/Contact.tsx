@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Instagram, Facebook, Send, CheckCircle } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { useSettings } from '@/lib/hooks';
+import { useSettings, useBusinessHours } from '@/lib/hooks';
 import { getSetting } from '@/lib/utils';
 import type { Product } from '@/types';
 import { FALLBACK_PRODUCTS } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
+import PageMeta from '@/components/ui/PageMeta';
 import TikTokIcon from '@/components/ui/TikTokIcon';
 
 export default function Contact() {
   const { settings } = useSettings();
+  const { hours } = useBusinessHours();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>('');
@@ -25,6 +27,16 @@ export default function Contact() {
   const instagram = getSetting(settings, 'instagram_url');
   const facebook = getSetting(settings, 'facebook_url');
   const tiktok = getSetting(settings, 'tiktok_url');
+  const hasSocials = instagram || facebook || tiktok;
+
+  const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const openDays = hours.filter((h) => !h.is_closed);
+  const closedDays = hours.filter((h) => h.is_closed);
+  const formatHourTime = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    const d = new Date(); d.setHours(h, m, 0, 0);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
 
   useEffect(() => {
     (async () => {
@@ -105,6 +117,8 @@ export default function Contact() {
 
   return (
     <>
+      <PageMeta title="Contact" description="Get in touch with Fargo Unisex Salon & Spa. Questions, product inquiries, or just saying hello." path="/contact" />
+
       {/* Header */}
       <section className="pt-32 pb-12 lg:pt-40 lg:pb-16 bg-cream-100 border-b border-ink-100">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
@@ -128,28 +142,53 @@ export default function Contact() {
                   <ContactRow icon={<MapPin size={18} />} label="Location" value={address} />
                 </div>
 
+                {hasSocials && (
                 <div className="mt-8 pt-8 border-t border-ink-100">
                   <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-4">Follow</p>
                   <div className="flex items-center gap-3">
+                    {instagram && (
                     <a href={instagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center border border-ink-200 hover:border-rose-500 hover:text-rose-500 transition-colors" aria-label="Instagram">
                       <Instagram size={18} />
                     </a>
+                    )}
+                    {facebook && (
                     <a href={facebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center border border-ink-200 hover:border-rose-500 hover:text-rose-500 transition-colors" aria-label="Facebook">
                       <Facebook size={18} />
                     </a>
+                    )}
+                    {tiktok && (
                     <a href={tiktok} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center border border-ink-200 hover:border-rose-500 hover:text-rose-500 transition-colors" aria-label="TikTok">
                       <TikTokIcon size={18} />
                     </a>
+                    )}
                   </div>
                 </div>
+                )}
 
                 <div className="mt-8 pt-8 border-t border-ink-100">
                   <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-4">Hours</p>
-                  <ul className="space-y-2 text-sm text-ink-600">
-                    <li className="flex justify-between"><span>Tue – Sat</span><span>9:00 – 19:00</span></li>
-                    <li className="flex justify-between"><span>Sunday</span><span>12:00 – 18:00</span></li>
-                    <li className="flex justify-between"><span>Monday</span><span>Closed</span></li>
-                  </ul>
+                  {openDays.length > 0 ? (
+                    <ul className="space-y-2 text-sm text-ink-600">
+                      {openDays.map((h) => (
+                        <li key={h.day_of_week} className="flex justify-between">
+                          <span>{DAY_LABELS[h.day_of_week]}</span>
+                          <span>{formatHourTime(h.open_time)} – {formatHourTime(h.close_time)}</span>
+                        </li>
+                      ))}
+                      {closedDays.map((h) => (
+                        <li key={h.day_of_week} className="flex justify-between">
+                          <span>{DAY_LABELS[h.day_of_week]}</span>
+                          <span className="text-ink-400">Closed</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <ul className="space-y-2 text-sm text-ink-600">
+                      <li className="flex justify-between"><span>Tue – Sat</span><span>9:00 – 19:00</span></li>
+                      <li className="flex justify-between"><span>Sunday</span><span>12:00 – 18:00</span></li>
+                      <li className="flex justify-between"><span>Monday</span><span>Closed</span></li>
+                    </ul>
+                  )}
                 </div>
 
                 <div className="mt-8 pt-8 border-t border-ink-100">

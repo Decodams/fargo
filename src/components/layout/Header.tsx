@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
@@ -29,13 +28,13 @@ export default function Header() {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (menuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
+    return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
   const isHome = location.pathname === '/';
@@ -98,8 +97,8 @@ export default function Header() {
               to="/booking"
               className={`inline-flex items-center justify-center px-6 py-2.5 text-sm tracking-wider-2 uppercase font-medium transition-all duration-300 ${
                 solidHeader
-                  ? 'bg-ink-900 text-cream-50:hover:bg-rose-500'
-                  : 'bg-cream-50 text-ink-900:hover:bg-rose-500 hover:text-cream-50'
+                  ? 'bg-ink-900 text-cream-50 hover:bg-rose-500'
+                  : 'bg-cream-50 text-ink-900 hover:bg-rose-500 hover:text-cream-50'
               }`}
             >
               Book Now
@@ -108,7 +107,7 @@ export default function Header() {
 
           {/* Mobile menu button */}
           <button
-            className={`lg:hidden p-2 transition-colors ${solidHeader ? 'text-ink-900' : 'text-cream-50'}`}
+            className={`lg:hidden p-2 transition-colors ${solidHeader ? 'text-ink-900 hover:text-rose-500' : 'text-cream-50 hover:text-rose-400'}`}
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
@@ -119,39 +118,33 @@ export default function Header() {
       </div>
 
       {/* Mobile menu */}
-      {menuOpen && (
-        <motion.div
-          className="lg:hidden bg-cream-50 border-t border-ink-100"
-          style={{
-            transform: menuOpen ? 'translateY(0)' : 'translateY(-100%)',
-            opacity: menuOpen ? 1 : 0,
-          }}
-          whileHover={{ opacity: 0.9 }}
-          exit={{ opacity: 0, transition: { duration: 0.2 } }}
-        >
-          <nav className="flex flex-col px-5 py-6 gap-1">
-            {NAV_LINKS.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                className={({ isActive }) =>
-                  `py-3 px-2 text-base tracking-wide border-b border-ink-100/60 transition-colors ${
-                    isActive ? 'text-rose-500' : 'text-ink-800 hover:text-rose-500'
-                  }`
-                }
-              >
-                {link.label}
-              </NavLink>
-            ))}
-            <Link
-              to="/booking"
-              className="mt-4 inline-flex items-center justify-center px-6 py-3.5 bg-ink-900 text-cream-50 text-sm tracking-wider-2 uppercase font-medium"
+      <div
+        className={`lg:hidden bg-cream-50 border-t border-ink-100 overflow-hidden transition-all duration-300 ease-in-out ${
+          menuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <nav className="flex flex-col px-5 py-6 gap-1">
+          {NAV_LINKS.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                `py-3 px-2 text-base tracking-wide border-b border-ink-100/60 transition-colors ${
+                  isActive ? 'text-rose-500' : 'text-ink-800 hover:text-rose-500'
+                }`
+              }
             >
-              Book Now
-            </Link>
-          </nav>
-        </motion.div>
-      )}
+              {link.label}
+            </NavLink>
+          ))}
+          <Link
+            to="/booking"
+            className="mt-4 inline-flex items-center justify-center px-6 py-3.5 bg-ink-900 text-cream-50 text-sm tracking-wider-2 uppercase font-medium"
+          >
+            Book Now
+          </Link>
+        </nav>
+      </div>
     </header>
   );
 }

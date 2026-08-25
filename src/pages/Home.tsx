@@ -204,7 +204,7 @@ export default function Home() {
 
       <section className="relative py-24 lg:py-36 overflow-hidden">
         <div className="absolute inset-0">
-          <img src={IMAGES.spaMassage2} alt="Massage therapy" className="w-full h-full object-cover" />
+          <img src={IMAGES.spaMassage2} alt="Massage therapy" loading="lazy" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-ink-900/75" />
         </div>
         <div className="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
@@ -239,19 +239,19 @@ export default function Home() {
           </Reveal>
           <div className="mt-14 grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             <Reveal className="col-span-2 lg:col-span-2 lg:row-span-2">
-              <img src={IMAGES.salonInterior} alt="Salon interior" className="w-full h-full object-cover min-h-[300px] lg:min-h-[500px]" />
+              <img src={IMAGES.salonInterior} alt="Salon interior" loading="lazy" className="w-full h-full object-cover min-h-[300px] lg:min-h-[500px]" />
             </Reveal>
             <Reveal delay={100}>
-              <img src={IMAGES.salonChair} alt="Salon chair and mirror" className="w-full h-48 lg:h-64 object-cover" />
+              <img src={IMAGES.salonChair} alt="Salon chair and mirror" loading="lazy" className="w-full h-48 lg:h-64 object-cover" />
             </Reveal>
             <Reveal delay={150}>
-              <img src={IMAGES.spaRoom} alt="Spa treatment room" className="w-full h-48 lg:h-64 object-cover" />
+              <img src={IMAGES.spaRoom} alt="Spa treatment room" loading="lazy" className="w-full h-48 lg:h-64 object-cover" />
             </Reveal>
             <Reveal delay={200}>
-              <img src={IMAGES.manicure2} alt="Manicure session" className="w-full h-48 lg:h-64 object-cover" />
+              <img src={IMAGES.manicure2} alt="Manicure session" loading="lazy" className="w-full h-48 lg:h-64 object-cover" />
             </Reveal>
             <Reveal delay={250}>
-              <img src={IMAGES.facialMask} alt="Facial treatment" className="w-full h-48 lg:h-64 object-cover" />
+              <img src={IMAGES.facialMask} alt="Facial treatment" loading="lazy" className="w-full h-48 lg:h-64 object-cover" />
             </Reveal>
           </div>
           <Reveal delay={150}>

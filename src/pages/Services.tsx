@@ -6,6 +6,7 @@ import { formatPriceRange, formatDuration } from '@/lib/utils';
 import type { Service, Category } from '@/types';
 import { FALLBACK_SERVICES, FALLBACK_CATEGORIES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
+import PageMeta from '@/components/ui/PageMeta';
 
 export default function Services() {
   const [services, setServices] = useState<Service[]>([]);
@@ -32,6 +33,8 @@ export default function Services() {
 
   return (
     <>
+      <PageMeta title="Services" description="Full range of hair, beauty, and wellness services at Fargo Unisex Salon & Spa. Browse our menu and book online." path="/services" />
+
       {/* Page header — distinct from home hero: editorial list style */}
       <section className="pt-32 pb-16 lg:pt-40 lg:pb-24 bg-cream-100 border-b border-ink-100">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">

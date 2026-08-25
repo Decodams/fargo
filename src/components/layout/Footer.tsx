@@ -1,17 +1,32 @@
 import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Phone, Mail, MapPin, Clock } from 'lucide-react';
-import { useSettings } from '@/lib/hooks';
+import { useSettings, useBusinessHours } from '@/lib/hooks';
 import { getSetting } from '@/lib/utils';
 import TikTokIcon from '@/components/ui/TikTokIcon';
 
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function formatHourTime(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
 export default function Footer() {
   const { settings } = useSettings();
+  const { hours } = useBusinessHours();
   const phone = getSetting(settings, 'contact_phone');
   const email = getSetting(settings, 'contact_email');
   const address = getSetting(settings, 'address');
   const instagram = getSetting(settings, 'instagram_url');
   const facebook = getSetting(settings, 'facebook_url');
   const tiktok = getSetting(settings, 'tiktok_url');
+
+  const openDays = hours.filter((h) => !h.is_closed);
+  const closedDays = hours.filter((h) => h.is_closed);
+
+  const hasSocials = instagram || facebook || tiktok;
 
   return (
     <footer className="bg-ink-900 text-cream-100">
@@ -24,35 +39,25 @@ export default function Footer() {
               A unisex hair, beauty, and wellness destination. In-salon and at-home,
               built around how you live.
             </p>
-            <div className="flex items-center gap-3 mt-6">
-              <a
-                href={instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center border border-ink-700 hover:border-rose-400 hover:text-rose-400 transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram size={16} />
-              </a>
-              <a
-                href={facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center border border-ink-700 hover:border-rose-400 hover:text-rose-400 transition-colors"
-                aria-label="Facebook"
-              >
-                <Facebook size={16} />
-              </a>
-              <a
-                href={tiktok}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center border border-ink-700 hover:border-rose-400 hover:text-rose-400 transition-colors"
-                aria-label="TikTok"
-              >
-                <TikTokIcon size={16} />
-              </a>
-            </div>
+            {hasSocials && (
+              <div className="flex items-center gap-3 mt-6">
+                {instagram && (
+                  <a href={instagram} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center border border-ink-700 hover:border-rose-400 hover:text-rose-400 transition-colors" aria-label="Instagram">
+                    <Instagram size={16} />
+                  </a>
+                )}
+                {facebook && (
+                  <a href={facebook} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center border border-ink-700 hover:border-rose-400 hover:text-rose-400 transition-colors" aria-label="Facebook">
+                    <Facebook size={16} />
+                  </a>
+                )}
+                {tiktok && (
+                  <a href={tiktok} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center border border-ink-700 hover:border-rose-400 hover:text-rose-400 transition-colors" aria-label="TikTok">
+                    <TikTokIcon size={16} />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Explore */}
@@ -69,10 +74,7 @@ export default function Footer() {
                 { to: '/faq', label: 'FAQ & Policies' },
               ].map((link) => (
                 <li key={link.to}>
-                  <Link
-                    to={link.to}
-                    className="text-sm text-ink-300 hover:text-cream-50 transition-colors"
-                  >
+                  <Link to={link.to} className="text-sm text-ink-300 hover:text-cream-50 transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -104,20 +106,28 @@ export default function Footer() {
             <h4 className="text-xs uppercase tracking-wider-2 text-ink-400 mb-5 flex items-center gap-2">
               <Clock size={14} /> Hours
             </h4>
-            <ul className="space-y-2.5 text-sm text-ink-300">
-              <li className="flex justify-between gap-4">
-                <span>Tue – Sat</span>
-                <span className="text-ink-400">9:00 – 19:00</span>
-              </li>
-              <li className="flex justify-between gap-4">
-                <span>Sunday</span>
-                <span className="text-ink-400">12:00 – 18:00</span>
-              </li>
-              <li className="flex justify-between gap-4">
-                <span>Monday</span>
-                <span className="text-ink-400">Closed</span>
-              </li>
-            </ul>
+            {openDays.length > 0 ? (
+              <ul className="space-y-2.5 text-sm text-ink-300">
+                {openDays.map((h) => (
+                  <li key={h.day_of_week} className="flex justify-between gap-4">
+                    <span>{DAY_LABELS[h.day_of_week]}</span>
+                    <span className="text-ink-400">{formatHourTime(h.open_time)} – {formatHourTime(h.close_time)}</span>
+                  </li>
+                ))}
+                {closedDays.map((h) => (
+                  <li key={h.day_of_week} className="flex justify-between gap-4">
+                    <span>{DAY_LABELS[h.day_of_week]}</span>
+                    <span className="text-ink-500">Closed</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="space-y-2.5 text-sm text-ink-300">
+                <li className="flex justify-between gap-4"><span>Tue – Sat</span><span className="text-ink-400">9:00 – 19:00</span></li>
+                <li className="flex justify-between gap-4"><span>Sunday</span><span className="text-ink-400">12:00 – 18:00</span></li>
+                <li className="flex justify-between gap-4"><span>Monday</span><span className="text-ink-400">Closed</span></li>
+              </ul>
+            )}
             <Link
               to="/booking"
               className="inline-flex items-center justify-center mt-6 px-5 py-2.5 border border-ink-700 text-xs uppercase tracking-wider-2 hover:border-rose-400 hover:text-rose-400 transition-colors"
@@ -135,7 +145,7 @@ export default function Footer() {
             <Link to="/faq" className="text-xs text-ink-500 hover:text-ink-300 transition-colors">
               Policies
             </Link>
-            <Link to="/admin" className="text-xs text-ink-500 hover:text-ink-300 transition-colors">
+            <Link to="/admin/login" className="text-xs text-ink-500 hover:text-ink-300 transition-colors">
               Staff Login
             </Link>
           </div>

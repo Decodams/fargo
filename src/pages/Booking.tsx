@@ -7,6 +7,7 @@ import { getSetting, formatPrice, formatPriceRange, formatDuration, DAY_NAMES, D
 import type { Service, Staff, BusinessHour, Category } from '@/types';
 import { FALLBACK_SERVICES, FALLBACK_STAFF, FALLBACK_BUSINESS_HOURS, FALLBACK_CATEGORIES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
+import PageMeta from '@/components/ui/PageMeta';
 
 type Step = 'service' | 'mode' | 'datetime' | 'details' | 'payment' | 'submitting';
 type Mode = 'in_salon' | 'home';
@@ -62,6 +63,10 @@ export default function Booking() {
     notes: '',
     prepay: false,
   });
+
+  const bankName = getSetting(settings, 'bank_name') || 'Moniepoint';
+  const accountNumber = getSetting(settings, 'account_number') || '5308789513';
+  const accountName = getSetting(settings, 'account_name') || 'Fargo Unisex Salon and Spa';
 
   const currency = getSetting(settings, 'currency_symbol');
   const homeFee = Number(getSetting(settings, 'home_service_fee')) || 2000;
@@ -354,6 +359,10 @@ export default function Booking() {
           total: grandTotal,
           prepay: state.prepay,
           confirmation_status: state.prepay ? 'pending' : 'confirmed',
+          customer_email: state.customerEmail,
+          bank_name: bankName,
+          account_number: accountNumber,
+          account_name: accountName,
         },
       });
     } catch (err) {
@@ -390,6 +399,8 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
 
   return (
     <>
+      <PageMeta title="Book a Session" description="Book your appointment at Fargo Unisex Salon & Spa. Choose services, pick a time, and confirm your booking." path="/booking" />
+
       {/* Header */}
       <section className="pt-28 pb-8 bg-cream-100 border-b border-ink-100">
         <div className="max-w-4xl mx-auto px-5 sm:px-8">
@@ -702,9 +713,9 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
                 <div className="mt-6 p-5 bg-cream-100 border border-ink-100 text-sm text-ink-600 space-y-3">
                   <p className="font-medium text-ink-900">Bank Transfer Details</p>
                   <div className="space-y-1.5 text-sm">
-                    <p><span className="text-ink-400">Bank:</span> Moniepoint</p>
-                    <p><span className="text-ink-400">Account Name:</span> Fargo Unisex Salon and Spa</p>
-                    <p><span className="text-ink-400">Account Number:</span> <span className="font-mono font-medium text-ink-900">5308789513</span></p>
+                    <p><span className="text-ink-400">Bank:</span> {bankName}</p>
+                    <p><span className="text-ink-400">Account Name:</span> {accountName}</p>
+                    <p><span className="text-ink-400">Account Number:</span> <span className="font-mono font-medium text-ink-900">{accountNumber}</span></p>
                   </div>
                   <p className="text-xs text-ink-500 mt-3">
                     After transferring, your booking will be pending until the admin confirms your payment.

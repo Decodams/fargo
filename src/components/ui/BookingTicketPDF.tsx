@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 export function useBookingTicket() {
   const { state } = useLocation();
-  const { reference, name, services, date, mode, total, prepay } = state || {};
+  const { reference, name, services, date, mode, total, prepay, bank_name, account_number, account_name } = state || {};
 
   const generatePDF = () => {
     if (!reference || !name) return;
@@ -123,7 +123,7 @@ export function useBookingTicket() {
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(113, 63, 18);
-      doc.text('Moniepoint  |  Acct: 5308789513  |  Fargo Unisex Salon and Spa', leftCol, y);
+      doc.text(`${bank_name || 'Moniepoint'}  |  Acct: ${account_number || '5308789513'}  |  ${account_name || 'Fargo Unisex Salon and Spa'}`, leftCol, y);
       y += 5;
       doc.setFontSize(7);
       doc.setTextColor(161, 98, 7);
