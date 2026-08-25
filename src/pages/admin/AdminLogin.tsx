@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -23,16 +23,26 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
+      if (!isSupabaseConfigured) {
+        setError('Admin login is unavailable because Supabase is not configured.');
+        return;
+      }
+
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
       if (authError) {
-        const msg = authError.message || authError.error_description || 'Invalid email or password';
-        setError(msg);
-        setLoading(false);
+        setError(authError.message || 'Invalid email or password');
         return;
       }
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        setError(sessionError?.message || 'Login succeeded, but the session could not be established. Please try again.');
+        return;
+      }
+
       navigate('/admin');
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'message' in err) {
