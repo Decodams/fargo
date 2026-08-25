@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, Check, Clock, Home as HomeIcon, Store, Calendar, CreditCard, Loader2, Info } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, supabasePublicKey } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
 import { getSetting, formatPrice, formatPriceRange, formatDuration, DAY_NAMES, DAY_SHORT, MONTH_NAMES } from '@/lib/utils';
 import type { Service, Staff, BusinessHour, Category, DistanceZone } from '@/types';
@@ -358,7 +358,7 @@ export default function Booking() {
           const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
           await fetch(fnUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${supabasePublicKey}` },
             body: JSON.stringify({
               type: 'booking',
               reference: reference,

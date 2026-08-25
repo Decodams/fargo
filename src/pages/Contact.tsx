@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Instagram, Facebook, Send, CheckCircle } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, supabasePublicKey } from '@/lib/supabase';
 import { useSettings, useBusinessHours } from '@/lib/hooks';
 import { getSetting } from '@/lib/utils';
 import type { Product } from '@/types';
@@ -86,7 +86,7 @@ export default function Contact() {
           const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
           await fetch(fnUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${supabasePublicKey}` },
             body: JSON.stringify({
               type: 'inquiry',
               customer_name: form.name.trim(),

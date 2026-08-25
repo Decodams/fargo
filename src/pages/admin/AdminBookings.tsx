@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Search, Calendar, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabasePublicKey } from '@/lib/supabase';
 import { formatPrice, formatDateTime, formatDate, formatTime, formatDuration, DAY_NAMES } from '@/lib/utils';
 import type { Booking, BookingService, SettingsMap } from '@/types';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -111,7 +111,7 @@ export default function AdminBookings() {
           const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
           await fetch(fnUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${supabasePublicKey}` },
             body: JSON.stringify({
               type: 'booking_confirmed',
               reference: data.reference,

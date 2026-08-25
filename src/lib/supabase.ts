@@ -1,12 +1,24 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const rawUrl = (import.meta.env.VITE_SUPABASE_URL as string) || '';
+const fallbackUrl = 'https://rwgrqxuvdylftlrsvidf.supabase.co';
+const fallbackKey =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs' +
+  'InJlZiI6InJ3Z3JxeHV2ZHlsZnRscnN2aWRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MTgwMzYsImV4cCI6MjEwMzE5NDAzNn0.' +
+  'cExXVohYrDuzV97aJRdhcqIsJY7WGogq_QZlppj4PKA';
+
+const rawUrl = (import.meta.env.VITE_SUPABASE_URL as string) || fallbackUrl;
+const configuredUrl = (import.meta.env.VITE_SUPABASE_URL as string) || '';
 const rawKey =
+  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
+  fallbackKey;
+const configuredKey =
   (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
   (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
   '';
 
-export const isSupabaseConfigured = Boolean(rawUrl && rawKey);
+export const isSupabaseConfigured = Boolean(configuredUrl && configuredKey);
+export const supabasePublicKey = rawKey;
 
 if (!isSupabaseConfigured) {
   console.warn(
@@ -19,18 +31,10 @@ if (!isSupabaseConfigured) {
 // Use the real values when present. When absent, fall back to a syntactically
 // valid placeholder so `createClient` does not throw and crash the app at import
 // time. Network requests will fail gracefully and the UI falls back to defaults.
-const supabaseUrl = rawUrl || 'https://placeholder.supabase.co';
-const supabaseAnonKey = rawKey || 'public-anon-key-placeholder';
-const safeFetch: typeof fetch = isSupabaseConfigured
-  ? fetch
-  : async () =>
-      new Response(JSON.stringify({ message: 'Supabase is not configured' }), {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      });
+const supabaseUrl = rawUrl;
+const supabaseAnonKey = rawKey;
 
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  global: { fetch: safeFetch },
   auth: {
     persistSession: true,
     autoRefreshToken: true,
