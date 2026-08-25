@@ -107,12 +107,12 @@ export default function AdminInquiries() {
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-ink-900/40" onClick={() => setSelected(null)} />
           <div className="relative w-full max-w-md bg-cream-50 h-full overflow-y-auto animate-slide-in">
-            <div className="sticky top-0 bg-cream-50 border-b border-ink-100 px-5 py-4 flex items-center justify-between">
-              <h2 className="text-lg font-display text-ink-900">Inquiry</h2>
-              <button onClick={() => setSelected(null)} className="text-ink-400 hover:text-ink-900"><X size={20} /></button>
+            <div className="sticky top-0 bg-cream-50 border-b border-ink-100 px-4 lg:px-5 py-3 lg:py-4 flex items-center justify-between z-10">
+              <h2 className="text-base lg:text-lg font-display text-ink-900">Inquiry</h2>
+              <button onClick={() => setSelected(null)} className="p-1 text-ink-400 hover:text-ink-900"><X size={20} /></button>
             </div>
 
-            <div className="p-5 space-y-5">
+            <div className="p-4 lg:p-5 space-y-4 lg:space-y-5">
               <div className="flex items-center gap-3">
                 <StatusBadge status={selected.status} variant="inquiry" />
                 <span className="text-xs uppercase tracking-wider-2 text-ink-400">{selected.type}</span>

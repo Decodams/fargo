@@ -7,6 +7,7 @@ import { getSetting } from '@/lib/utils';
 import type { Product } from '@/types';
 import { FALLBACK_PRODUCTS } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
+import TikTokIcon from '@/components/ui/TikTokIcon';
 
 export default function Contact() {
   const { settings } = useSettings();
@@ -23,6 +24,7 @@ export default function Contact() {
   const address = getSetting(settings, 'address');
   const instagram = getSetting(settings, 'instagram_url');
   const facebook = getSetting(settings, 'facebook_url');
+  const tiktok = getSetting(settings, 'tiktok_url');
 
   useEffect(() => {
     (async () => {
@@ -134,6 +136,9 @@ export default function Contact() {
                     </a>
                     <a href={facebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center border border-ink-200 hover:border-rose-500 hover:text-rose-500 transition-colors" aria-label="Facebook">
                       <Facebook size={18} />
+                    </a>
+                    <a href={tiktok} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center border border-ink-200 hover:border-rose-500 hover:text-rose-500 transition-colors" aria-label="TikTok">
+                      <TikTokIcon size={18} />
                     </a>
                   </div>
                 </div>

@@ -64,33 +64,33 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <StatCard icon={<CalendarDays size={18} />} label="Today" value={stats?.todayCount.toString() ?? '0'} sub="appointments" />
         <StatCard icon={<Clock size={18} />} label="This Week" value={stats?.weekCount.toString() ?? '0'} sub="bookings" />
         <StatCard icon={<MessageSquare size={18} />} label="New Inquiries" value={stats?.pendingInquiries.toString() ?? '0'} sub="awaiting response" />
         <StatCard icon={<TrendingUp size={18} />} label="Revenue" value={formatPrice(stats?.revenue ?? 0, currency)} sub="pre-paid total" />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Today's bookings */}
         <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-display text-ink-900">Today's Bookings</h2>
+          <div className="flex items-center justify-between mb-3 lg:mb-4">
+            <h2 className="text-base lg:text-lg font-display text-ink-900">Today's Bookings</h2>
             <Link to="/admin/bookings" className="text-xs uppercase tracking-wider-2 text-ink-500 hover:text-ink-900 transition-colors flex items-center gap-1">
               View all <ArrowRight size={13} />
             </Link>
           </div>
           {todayBookings.length === 0 ? (
-            <div className="bg-cream-100 border border-ink-100 p-10 text-center text-ink-400 text-sm">
+            <div className="bg-cream-100 border border-ink-100 p-8 lg:p-10 text-center text-ink-400 text-sm">
               No bookings scheduled for today.
             </div>
           ) : (
             <div className="space-y-2">
               {todayBookings.map((booking) => (
-                <div key={booking.id} className="bg-cream-50 border border-ink-100 p-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 min-w-0 flex-1">
+                <div key={booking.id} className="bg-cream-50 border border-ink-100 p-3 lg:p-4 flex items-center justify-between gap-3 lg:gap-4">
+                  <div className="flex items-center gap-3 lg:gap-4 min-w-0 flex-1">
                     <div className="text-center shrink-0">
                       <p className="text-xs uppercase tracking-wider text-ink-400">{formatTime(booking.scheduled_at).split(' ')[0]}</p>
                       <p className="text-xs text-ink-400">{formatTime(booking.scheduled_at).split(' ')[1]}</p>
@@ -111,20 +111,20 @@ export default function AdminDashboard() {
 
         {/* Recent inquiries */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-display text-ink-900">Recent Inquiries</h2>
+          <div className="flex items-center justify-between mb-3 lg:mb-4">
+            <h2 className="text-base lg:text-lg font-display text-ink-900">Recent Inquiries</h2>
             <Link to="/admin/inquiries" className="text-xs uppercase tracking-wider-2 text-ink-500 hover:text-ink-900 transition-colors flex items-center gap-1">
               All <ArrowRight size={13} />
             </Link>
           </div>
           {recentInquiries.length === 0 ? (
-            <div className="bg-cream-100 border border-ink-100 p-10 text-center text-ink-400 text-sm">
+            <div className="bg-cream-100 border border-ink-100 p-8 lg:p-10 text-center text-ink-400 text-sm">
               No new inquiries.
             </div>
           ) : (
             <div className="space-y-2">
               {recentInquiries.map((inq) => (
-                <div key={inq.id} className="bg-cream-50 border border-ink-100 p-4">
+                <div key={inq.id} className="bg-cream-50 border border-ink-100 p-3 lg:p-4">
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-medium text-ink-900 truncate">{inq.name}</p>
                     <StatusBadge status={inq.status} variant="inquiry" />
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid sm:grid-cols-3 gap-4 pt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 pt-2 lg:pt-4">
         <QuickAction to="/admin/services" label="Manage Services" icon={<CalendarDays size={18} />} />
         <QuickAction to="/admin/settings" label="Business Settings" icon={<Users size={18} />} />
         <QuickAction to="/admin/customers" label="View Customers" icon={<Users size={18} />} />

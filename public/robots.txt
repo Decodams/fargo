@@ -1,0 +1,9 @@
+# Fargo Unisex Salon & Spa
+# Allow all crawlers — Google, Bing, AI, scrapers
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/*
+
+Sitemap: https://fargounisexsalon.com/sitemap.xml

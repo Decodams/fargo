@@ -65,6 +65,7 @@ export interface Booking {
   payment_reference: string | null;
   payment_amount: number | null;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+  confirmation_status: 'pending' | 'confirmed';
   notes: string | null;
   created_at: string;
   updated_at: string;

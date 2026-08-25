@@ -73,16 +73,19 @@ ON CONFLICT (day_of_week) DO NOTHING;
 -- SETTINGS
 INSERT INTO settings (key, value) VALUES
   ('business_name', 'Fargo Unisex Salon & Spa'),
-  ('notification_email', 'hello@fargosalon.com'),
+  ('notification_email', 'Fargounisexsalon@gmail.com'),
   ('tiktok_url', 'https://www.tiktok.com/@fargo.unisex.salon'),
-  ('site_url', 'https://fargosalon.com'),
-  ('contact_phone', '+234 800 000 0000'),
-  ('contact_email', 'hello@fargosalon.com'),
-  ('address', 'Southeast Nigeria'),
+  ('site_url', 'https://fargounisexsalon.com'),
+  ('contact_phone', '09012101020'),
+  ('contact_email', 'Fargounisexsalon@gmail.com'),
+  ('address', 'No 8 Dr Billy Okoye Boulevard By Revenue House/Immigration Awka Anambra State'),
   ('home_service_area', 'Within 15km of our salon location'),
   ('home_service_fee', '2000'),
-  ('instagram_url', 'https://instagram.com'),
-  ('facebook_url', 'https://facebook.com'),
+  ('instagram_url', 'https://www.instagram.com/fargounisexsalonandspa?igsi=MXNydmV3eGUzYWU2eA=='),
+  ('facebook_url', 'https://www.facebook.com/share/1MQiUn9Dhm/'),
+  ('bank_name', 'Moniepoint'),
+  ('account_number', '5308789513'),
+  ('account_name', 'Fargo Unisex Salon and Spa'),
   ('buffer_time_minutes', '15'),
   ('currency_symbol', '₦')
 ON CONFLICT (key) DO NOTHING;
@@ -91,7 +94,7 @@ ON CONFLICT (key) DO NOTHING;
 INSERT INTO products (name, slug, category, description, price, display_order) VALUES
   ('Permanent Hair Dye — Black', 'hair-dye-black', 'Hair Colour', 'Long-lasting black hair dye for rich, even coverage.', 2500, 1),
   ('Professional Hair Clippers', 'professional-hair-clippers', 'Tools', 'Cordless professional clippers with adjustable blades.', 15000, 2),
-  (' Firm Hold Hair Spray', 'firm-hold-hair-spray', 'Styling', 'Long-lasting firm hold without flaking or stiffness.', 2000, 3),
+  ('Firm Hold Hair Spray', 'firm-hold-hair-spray', 'Styling', 'Long-lasting firm hold without flaking or stiffness.', 2000, 3),
   ('Styling Comb Set', 'styling-comb-set', 'Tools', 'A set of premium styling combs for all hair types.', 1500, 4),
   ('Edge Control Gel', 'edge-control-gel', 'Styling', 'Sleek edge control with 24-hour hold and no flaking.', 1800, 5),
   ('Moisturising Shampoo', 'moisturising-shampoo', 'Hair Care', 'Sulphate-free moisturising shampoo for daily use.', 3000, 6),

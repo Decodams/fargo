@@ -68,11 +68,11 @@ export default function AdminCustomers() {
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-ink-900/40" onClick={() => setSelected(null)} />
           <div className="relative w-full max-w-md bg-cream-50 h-full overflow-y-auto animate-slide-in">
-            <div className="sticky top-0 bg-cream-50 border-b border-ink-100 px-5 py-4 flex items-center justify-between">
-              <h2 className="text-lg font-display text-ink-900">Customer</h2>
-              <button onClick={() => setSelected(null)} className="text-ink-400 hover:text-ink-900">✕</button>
+            <div className="sticky top-0 bg-cream-50 border-b border-ink-100 px-4 lg:px-5 py-3 lg:py-4 flex items-center justify-between z-10">
+              <h2 className="text-base lg:text-lg font-display text-ink-900">Customer</h2>
+              <button onClick={() => setSelected(null)} className="p-1 text-ink-400 hover:text-ink-900">✕</button>
             </div>
-            <div className="p-5 space-y-5">
+            <div className="p-4 lg:p-5 space-y-4 lg:space-y-5">
               <div className="space-y-2">
                 <p className="text-lg font-display text-ink-900">{selected.name}</p>
                 <p className="text-sm text-ink-600">{selected.email}</p>

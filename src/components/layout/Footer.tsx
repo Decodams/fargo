@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Phone, Mail, MapPin, Clock } from 'lucide-react';
 import { useSettings } from '@/lib/hooks';
 import { getSetting } from '@/lib/utils';
+import TikTokIcon from '@/components/ui/TikTokIcon';
 
 export default function Footer() {
   const { settings } = useSettings();
@@ -46,10 +47,10 @@ export default function Footer() {
                 href={tiktok}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 flex items-center justify-center text-ink-500 hover:text-rose-400 transition-colors"
+                className="w-9 h-9 flex items-center justify-center border border-ink-700 hover:border-rose-400 hover:text-rose-400 transition-colors"
                 aria-label="TikTok"
               >
-                TikTok
+                <TikTokIcon size={16} />
               </a>
             </div>
           </div>

@@ -135,12 +135,12 @@ export default function AdminServices() {
 
       {/* Edit modal */}
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-ink-900/40" onClick={() => setEditing(null)} />
-          <div className="relative bg-cream-50 w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+          <div className="relative bg-cream-50 w-full sm:max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto p-5 sm:p-6 rounded-t-xl sm:rounded-none">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-display text-ink-900">{editing.id ? 'Edit Service' : 'New Service'}</h2>
-              <button onClick={() => setEditing(null)} className="text-ink-400 hover:text-ink-900"><X size={20} /></button>
+              <h2 className="text-base lg:text-lg font-display text-ink-900">{editing.id ? 'Edit Service' : 'New Service'}</h2>
+              <button onClick={() => setEditing(null)} className="p-1 text-ink-400 hover:text-ink-900"><X size={20} /></button>
             </div>
 
             <div className="space-y-4">

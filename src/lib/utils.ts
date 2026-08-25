@@ -2,16 +2,16 @@ import type { SettingsMap } from '@/types';
 
 export const DEFAULT_SETTINGS: SettingsMap = {
   business_name: 'Fargo Unisex Salon & Spa',
-  notification_email: 'hello@fargosalon.com',
+  notification_email: 'Fargounisexsalon@gmail.com',
   tiktok_url: 'https://www.tiktok.com/@fargo.unisex.salon',
-  site_url: 'https://fargosalon.com',
-  contact_phone: '+234 800 000 0000',
-  contact_email: 'hello@fargosalon.com',
-  address: 'Port Harcourt, Nigeria',
+  site_url: 'https://fargounisexsalon.com',
+  contact_phone: '09012101020',
+  contact_email: 'Fargounisexsalon@gmail.com',
+  address: 'No 8 Dr Billy Okoye Boulevard By Revenue House/Immigration Awka Anambra State',
   home_service_area: 'Within 15km of our salon location',
   home_service_fee: '2000',
-  instagram_url: 'https://instagram.com',
-  facebook_url: 'https://facebook.com',
+  instagram_url: 'https://www.instagram.com/fargounisexsalonandspa?igsi=MXNydmV3eGUzYWU2eA==',
+  facebook_url: 'https://www.facebook.com/share/1MQiUn9Dhm/',
   buffer_time_minutes: '15',
   currency_symbol: '₦',
   // Hero & homepage

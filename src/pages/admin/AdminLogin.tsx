@@ -7,7 +7,6 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,26 +23,12 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      if (mode === 'signup') {
-        const { data, error: authError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-        });
-        if (authError) throw authError;
-        if (data.session) {
-          navigate('/admin');
-        } else {
-          setError('Account created. Please sign in with your credentials.');
-          setMode('signin');
-        }
-      } else {
-        const { error: authError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (authError) throw authError;
-        navigate('/admin');
-      }
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (authError) throw authError;
+      navigate('/admin');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
@@ -52,15 +37,15 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-ink-900 px-5">
+    <div className="min-h-screen flex items-center justify-center bg-ink-900 px-4 sm:px-5">
       <div className="w-full max-w-sm">
-        <Link to="/" className="block text-center mb-10">
+        <Link to="/" className="block text-center mb-8 sm:mb-10">
           <span className="text-3xl font-display text-cream-50">Fargo</span>
           <p className="text-xs uppercase tracking-wider-3 text-ink-400 mt-1">Staff Portal</p>
         </Link>
 
-        <form onSubmit={handleSubmit} className="bg-ink-800 p-8 border border-ink-700">
-          <h1 className="text-xl font-display text-cream-50 mb-6">{mode === 'signin' ? 'Sign in' : 'Create admin account'}</h1>
+        <form onSubmit={handleSubmit} className="bg-ink-800 p-6 sm:p-8 border border-ink-700">
+          <h1 className="text-xl font-display text-cream-50 mb-6">Sign in</h1>
 
           <div className="space-y-4">
             <div>
@@ -98,16 +83,9 @@ export default function AdminLogin() {
             disabled={loading}
             className="w-full mt-6 py-3.5 bg-cream-50 text-ink-900 text-sm tracking-wider-2 uppercase font-medium hover:bg-rose-500 hover:text-cream-50 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+            {loading ? 'Please wait...' : 'Sign In'}
           </button>
         </form>
-
-        <button
-          onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); }}
-          className="block w-full text-center mt-4 text-xs text-ink-500 hover:text-ink-300 transition-colors"
-        >
-          {mode === 'signin' ? 'No account? Create one →' : '← Already have an account?'}
-        </button>
 
         <Link to="/" className="block text-center mt-3 text-xs text-ink-500 hover:text-ink-300 transition-colors">
           ← Back to website

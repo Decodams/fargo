@@ -7,13 +7,13 @@ export default function PublicLayout() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [pathname]);
 
   return (
     <div className="min-h-screen flex flex-col bg-cream-50">
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 animate-fade-in">
         <Outlet />
       </main>
       <Footer />

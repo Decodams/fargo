@@ -353,6 +353,7 @@ export default function Booking() {
           mode: state.mode,
           total: grandTotal,
           prepay: state.prepay,
+          confirmation_status: state.prepay ? 'pending' : 'confirmed',
         },
       });
     } catch (err) {
@@ -678,7 +679,7 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
           {step === 'payment' && (
             <Reveal>
               <h2 className="text-xl font-display text-ink-900 mb-2">Payment</h2>
-              <p className="text-sm text-ink-500 mb-6">Payment is optional. You can pay now to secure your slot, or pay after your appointment.</p>
+              <p className="text-sm text-ink-500 mb-6">Choose how you'd like to handle payment for your booking.</p>
 
               <div className="space-y-3">
                 <PaymentOption
@@ -686,20 +687,29 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
                   onClick={() => update({ prepay: false })}
                   icon={<Clock size={20} />}
                   title="Pay after appointment"
-                  desc="Pay in person at the salon or on-site for home service."
+                  desc="Pay in person at the salon or on-site for home service. Your booking is confirmed immediately."
                 />
                 <PaymentOption
                   active={state.prepay}
                   onClick={() => update({ prepay: true })}
                   icon={<CreditCard size={20} />}
-                  title="Pay now (secure slot)"
-                  desc="Pre-pay online to confirm your reservation immediately."
+                  title="Pay now (Bank Transfer)"
+                  desc="Transfer to our company account below. Your booking awaits admin confirmation."
                 />
               </div>
 
               {state.prepay && (
-                <div className="mt-6 p-5 bg-cream-100 border border-ink-100 text-sm text-ink-600">
-                  <p>Online payment is processed securely through our payment partner. You won't be charged until you confirm on the next screen.</p>
+                <div className="mt-6 p-5 bg-cream-100 border border-ink-100 text-sm text-ink-600 space-y-3">
+                  <p className="font-medium text-ink-900">Bank Transfer Details</p>
+                  <div className="space-y-1.5 text-sm">
+                    <p><span className="text-ink-400">Bank:</span> Moniepoint</p>
+                    <p><span className="text-ink-400">Account Name:</span> Fargo Unisex Salon and Spa</p>
+                    <p><span className="text-ink-400">Account Number:</span> <span className="font-mono font-medium text-ink-900">5308789513</span></p>
+                  </div>
+                  <p className="text-xs text-ink-500 mt-3">
+                    After transferring, your booking will be pending until the admin confirms your payment.
+                    You'll receive your confirmation ticket once verified.
+                  </p>
                 </div>
               )}
 

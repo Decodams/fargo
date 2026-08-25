@@ -84,6 +84,19 @@ export default function AdminBookings() {
     }
   };
 
+  const updateConfirmationStatus = async (bookingId: string, confirmationStatus: string) => {
+    const { data } = await supabase
+      .from('bookings')
+      .update({ confirmation_status: confirmationStatus, updated_at: new Date().toISOString() })
+      .eq('id', bookingId)
+      .select()
+      .single();
+    if (data) {
+      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, confirmation_status: confirmationStatus as Booking['confirmation_status'] } : b)));
+      setSelected({ ...selected!, confirmation_status: confirmationStatus as Booking['confirmation_status'] });
+    }
+  };
+
   const currency = settings.currency_symbol ?? '₦';
 
   // Group bookings by day
@@ -201,18 +214,18 @@ export default function AdminBookings() {
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-ink-900/40" onClick={() => setSelected(null)} />
           <div className="relative w-full max-w-md bg-cream-50 h-full overflow-y-auto animate-slide-in">
-            <div className="sticky top-0 bg-cream-50 border-b border-ink-100 px-5 py-4 flex items-center justify-between">
-              <h2 className="text-lg font-display text-ink-900">Booking Details</h2>
-              <button onClick={() => setSelected(null)} className="text-ink-400 hover:text-ink-900"><X size={20} /></button>
+            <div className="sticky top-0 bg-cream-50 border-b border-ink-100 px-4 lg:px-5 py-3 lg:py-4 flex items-center justify-between z-10">
+              <h2 className="text-base lg:text-lg font-display text-ink-900">Booking Details</h2>
+              <button onClick={() => setSelected(null)} className="p-1 text-ink-400 hover:text-ink-900"><X size={20} /></button>
             </div>
 
-            <div className="p-5 space-y-5">
+            <div className="p-4 lg:p-5 space-y-4 lg:space-y-5">
               <div>
                 <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-1">Reference</p>
                 <p className="text-lg font-display text-ink-900">{selected.reference}</p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={selected.status} />
                 <StatusBadge status={selected.payment_status} variant="payment" />
               </div>
@@ -253,6 +266,24 @@ export default function AdminBookings() {
                       onClick={() => updateStatus(selected.id, s)}
                       className={`px-3 py-2 text-xs capitalize border transition-colors ${
                         selected.status === s
+                          ? 'bg-ink-900 text-cream-50 border-ink-900'
+                          : 'border-ink-200 text-ink-600 hover:border-ink-900'
+                      }`}
+                    >
+                      {s.replace('_', ' ')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="border-t border-ink-100 pt-4">
+                <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-3">Confirmation Status</p>
+                <div className="flex flex-wrap gap-2">
+                  {(['pending', 'confirmed'] as const).map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => updateConfirmationStatus(selected.id, s)}
+                      className={`px-3 py-2 text-xs capitalize border transition-colors ${
+                        selected.confirmation_status === s
                           ? 'bg-ink-900 text-cream-50 border-ink-900'
                           : 'border-ink-200 text-ink-600 hover:border-ink-900'
                       }`}
