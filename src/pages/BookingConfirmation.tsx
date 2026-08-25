@@ -1,29 +1,95 @@
+import { useState, useEffect } from 'react';
 import { useLocation, Link, Navigate } from 'react-router-dom';
-import { CheckCircle, Clock, ArrowRight, Download, MapPin, Phone, Mail } from 'lucide-react';
+import { CheckCircle, Clock, ArrowRight, Download, MapPin, Phone, Mail, RefreshCw } from 'lucide-react';
 import { useBookingTicket } from '@/components/ui/BookingTicketPDF';
 import { useSettings } from '@/lib/hooks';
 import { getSetting } from '@/lib/utils';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export default function BookingConfirmation() {
   const { state } = useLocation();
   const { settings } = useSettings();
-  const { reference, name, services, date, mode, total, prepay, confirmation_status, customer_email } = state || {};
-
+  const navigateState = state || {};
+  const reference = navigateState.reference;
   const { generatePDF } = useBookingTicket();
 
-  if (!state || !reference) {
-    return <Navigate to="/booking" replace />;
-  }
+  const [liveStatus, setLiveStatus] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
-  const formattedDate = new Date(date).toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
-  const formattedTime = new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const isPending = confirmation_status === 'pending';
+  const name = navigateState.name;
+  const services = navigateState.services;
+  const date = navigateState.date;
+  const mode = navigateState.mode;
+  const total = navigateState.total;
+  const prepay = navigateState.prepay;
+  const customerEmail = navigateState.customer_email;
+  const bankName = navigateState.bank_name || 'Moniepoint';
+  const accountNumber = navigateState.account_number || '5308789513';
+  const accountName = navigateState.account_name || 'Fargo Unisex Salon and Spa';
+
   const currency = getSetting(settings, 'currency_symbol') || '₦';
   const phone = getSetting(settings, 'contact_phone') || '09012101020';
   const email = getSetting(settings, 'contact_email') || 'Fargounisexsalon@gmail.com';
   const address = getSetting(settings, 'address') || 'No 8 Dr Billy Okoye Boulevard By Revenue House/Immigration Awka Anambra State';
+
+  // If no state, redirect to home
+  if (!reference) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Determine the effective confirmation status: live DB value > navigate state
+  const effectiveStatus = liveStatus ?? navigateState.confirmation_status;
+  const isPending = effectiveStatus === 'pending';
+  const isConfirmed = effectiveStatus === 'confirmed';
+
+  // Poll the database every 10 seconds to check for confirmation
+  useEffect(() => {
+    if (!isSupabaseConfigured || !reference) return;
+
+    const checkStatus = async () => {
+      const { data } = await supabase
+        .from('bookings')
+        .select('confirmation_status')
+        .eq('reference', reference)
+        .single();
+      if (data && data.confirmation_status !== liveStatus) {
+        setLiveStatus(data.confirmation_status);
+      }
+    };
+
+    // Check immediately
+    checkStatus();
+
+    // Then poll every 10 seconds while pending
+    const interval = setInterval(() => {
+      checkStatus();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [reference, liveStatus]);
+
+  const handleRefresh = async () => {
+    if (!reference) return;
+    setChecking(true);
+    const { data } = await supabase
+      .from('bookings')
+      .select('confirmation_status')
+      .eq('reference', reference)
+      .single();
+    if (data) {
+      setLiveStatus(data.confirmation_status);
+    }
+    setChecking(false);
+  };
+
+  const formattedDate = date
+    ? new Date(date).toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      })
+    : 'N/A';
+  const formattedTime = date
+    ? new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    : 'N/A';
 
   return (
     <div className="min-h-screen bg-cream-50 flex items-center justify-center px-5 py-20">
@@ -38,17 +104,30 @@ export default function BookingConfirmation() {
               Your booking has been received and your payment is being verified.
               You'll see your confirmation ticket once the admin approves your payment.
             </p>
-            <p className="text-sm text-ink-400 mb-8">
+            <p className="text-sm text-ink-400 mb-6">
               Reference: <span className="font-mono font-medium text-ink-700">{reference}</span>
             </p>
 
+            {/* Refresh button */}
+            <button
+              onClick={handleRefresh}
+              disabled={checking}
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-wider-2 text-ink-500 hover:text-ink-900 transition-colors mb-8 disabled:opacity-50"
+            >
+              <RefreshCw size={14} className={checking ? 'animate-spin' : ''} />
+              {checking ? 'Checking...' : 'Check status'}
+            </button>
+
+            {/* Booking Summary */}
             <div className="bg-cream-100 border border-ink-100 p-6 text-left mb-8">
               <h2 className="text-xs uppercase tracking-wider-2 text-ink-400 mb-4">Booking Summary</h2>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-ink-500">Customer</span>
-                  <span className="text-ink-900 font-medium">{name}</span>
-                </div>
+                {name && (
+                  <div className="flex justify-between">
+                    <span className="text-ink-500">Customer</span>
+                    <span className="text-ink-900 font-medium">{name}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-ink-500">Date</span>
                   <span className="text-ink-900">{formattedDate}</span>
@@ -61,21 +140,35 @@ export default function BookingConfirmation() {
                   <span className="text-ink-500">Mode</span>
                   <span className="text-ink-900">{mode === 'in_salon' ? 'In Salon' : 'Home Service'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-ink-500">Services</span>
-                  <span className="text-ink-900 text-right max-w-[60%]">{services?.join(', ')}</span>
-                </div>
-                <div className="flex justify-between pt-3 border-t border-ink-200">
-                  <span className="text-ink-900 font-medium">Total</span>
-                  <span className="text-ink-900 font-medium">{currency}{total?.toLocaleString()} (Bank Transfer)</span>
-                </div>
+                {services && (
+                  <div className="flex justify-between">
+                    <span className="text-ink-500">Services</span>
+                    <span className="text-ink-900 text-right max-w-[60%]">{services?.join(', ')}</span>
+                  </div>
+                )}
+                {total != null && (
+                  <div className="flex justify-between pt-3 border-t border-ink-200">
+                    <span className="text-ink-900 font-medium">Total</span>
+                    <span className="text-ink-900 font-medium">{currency}{total?.toLocaleString()} (Bank Transfer)</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bank details reminder */}
+            <div className="bg-cream-100 border border-ink-100 p-5 mb-8 text-left text-sm">
+              <p className="font-medium text-ink-900 mb-2">Transfer Details</p>
+              <div className="space-y-1 text-ink-600">
+                <p>Bank: {bankName}</p>
+                <p>Account Name: {accountName}</p>
+                <p>Account Number: <span className="font-mono font-medium text-ink-900">{accountNumber}</span></p>
               </div>
             </div>
 
             <div className="bg-amber-50 border border-amber-200 p-4 mb-8 text-sm text-amber-800">
               <p className="font-medium mb-1">What happens next?</p>
               <p className="text-amber-700">Our team will verify your bank transfer and confirm your booking.
-              You'll receive an email at <strong>{customer_email || 'your email'}</strong> once confirmed.</p>
+              You'll receive an email at <strong>{customerEmail || 'your email'}</strong> once confirmed.</p>
             </div>
 
             <p className="text-xs text-ink-400 mb-6">

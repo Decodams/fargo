@@ -85,15 +85,19 @@ export default function AdminBookings() {
   };
 
   const updateConfirmationStatus = async (bookingId: string, confirmationStatus: string) => {
+    const update: Record<string, string> = { confirmation_status: confirmationStatus, updated_at: new Date().toISOString() };
+    if (confirmationStatus === 'confirmed') {
+      update.status = 'confirmed';
+    }
     const { data } = await supabase
       .from('bookings')
-      .update({ confirmation_status: confirmationStatus, updated_at: new Date().toISOString() })
+      .update(update)
       .eq('id', bookingId)
       .select()
       .single();
     if (data) {
-      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, confirmation_status: confirmationStatus as Booking['confirmation_status'] } : b)));
-      setSelected({ ...selected!, confirmation_status: confirmationStatus as Booking['confirmation_status'] });
+      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, confirmation_status: confirmationStatus as Booking['confirmation_status'], ...(confirmationStatus === 'confirmed' ? { status: 'confirmed' as Booking['status'] } : {}) } : b)));
+      setSelected((prev) => prev && prev.id === bookingId ? { ...prev, confirmation_status: confirmationStatus as Booking['confirmation_status'], ...(confirmationStatus === 'confirmed' ? { status: 'confirmed' as Booking['status'] } : {}) } : prev);
     }
   };
 
@@ -197,6 +201,11 @@ export default function AdminBookings() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
+                        {booking.confirmation_status === 'pending' && (
+                          <span className="px-2 py-0.5 text-[10px] uppercase tracking-wider font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                            Bank Transfer Pending
+                          </span>
+                        )}
                         <span className="text-sm text-ink-700 hidden sm:block">{formatPrice(booking.total_price, currency)}</span>
                         <StatusBadge status={booking.status} />
                       </div>
