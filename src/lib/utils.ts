@@ -21,7 +21,7 @@ export const DEFAULT_SETTINGS: SettingsMap = {
   stat_1_number: '20+',
   stat_1_label: 'Services',
   stat_1_sub: '',
-  stat_2_number: '4',
+  stat_2_number: '10',
   stat_2_label: 'Specialists',
   stat_2_sub: '',
   stat_3_number: '2',

@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface NotificationPayload {
-  type: 'booking' | 'inquiry';
+  type: 'booking' | 'inquiry' | 'booking_confirmed';
   reference?: string;
   customer_name: string;
   customer_email: string;
@@ -51,21 +51,21 @@ Deno.serve(async (req: Request) => {
       .eq("key", "site_url")
       .maybeSingle();
 
-    const notifyEmail = settingData?.value ?? "hello@fargosalon.com";
-    const siteUrl = (siteSetting?.value ?? "https://fargosalon.com").replace(/\/$/, "");
+    const notifyEmail = settingData?.value ?? "Fargounisexsalon@gmail.com";
+    const siteUrl = (siteSetting?.value ?? "https://fargounisexsalon.com").replace(/\/$/, "");
 
-    // Build email content based on type
     let subject: string;
     let htmlBody: string;
+    let recipientEmail: string;
 
     if (payload.type === "booking") {
+      // New booking → email the admin
       subject = `New Booking — ${payload.reference ?? "No ref"}`;
+      recipientEmail = notifyEmail;
       const serviceList = payload.services?.map((s) => `<li>${s}</li>`).join("") ?? "";
       const dateStr = payload.scheduled_at
         ? new Date(payload.scheduled_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })
         : "Not specified";
-
-      // Determine confirmation state
       const isConfirmationPending = payload.confirmation_status === 'pending';
       const confirmationLabel = isConfirmationPending ? 'Pending Admin Confirmation' : 'Confirmed';
 
@@ -89,14 +89,45 @@ Deno.serve(async (req: Request) => {
           ${payload.notes ? `<p style="color: #6b5a4a;"><strong>Notes:</strong> ${payload.notes}</p>` : ""}
           <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
           ${isConfirmationPending
-            ? '<p style="color: #b85a4e; font-weight: bold;">⚠ This booking requires admin confirmation. The booking confirmation ticket will be released once the admin confirms the payment.</p>'
-            : '<p style="color: #3a3025;">✅ Booking confirmed. <a href="${siteUrl}/booking/confirmation" style="color: #b85a4e;">View confirmation ticket</a>.</p>'}
+            ? '<p style="color: #b85a4e; font-weight: bold;">This booking requires admin confirmation. The booking confirmation ticket will be released once the admin confirms the payment.</p>'
+            : '<p style="color: #3a3025;">Booking confirmed. The customer has been notified.</p>'}
           <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
           <p style="color: #8a7766; font-size: 13px;">Manage this booking in the <a href="${siteUrl}/admin/bookings" style="color: #b85a4e;">admin dashboard</a>.</p>
         </div>
       `;
+    } else if (payload.type === "booking_confirmed") {
+      // Payment confirmed → email the customer
+      subject = `Booking Confirmed — ${payload.reference ?? ""}`;
+      recipientEmail = payload.customer_email;
+      const serviceList = payload.services?.map((s) => `<li>${s}</li>`).join("") ?? "";
+      const dateStr = payload.scheduled_at
+        ? new Date(payload.scheduled_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })
+        : "Not specified";
+
+      htmlBody = `
+        <div style="font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #faf7f2;">
+          <h2 style="color: #1a1612; font-family: Georgia, serif;">Your Booking is Confirmed</h2>
+          <p style="color: #6b5a4a;">Hi <strong>${payload.customer_name}</strong>,</p>
+          <p style="color: #6b5a4a;">Your payment has been verified and your booking is now confirmed.</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Reference</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5; font-weight: bold;">${payload.reference ?? "N/A"}</td></tr>
+            <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">When</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">${dateStr}</td></tr>
+            <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Mode</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">${payload.service_mode === "home" ? "Home Service" : "In Salon"}</td></tr>
+            <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Total</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">₦${(payload.total_price ?? 0).toLocaleString()}</td></tr>
+          </table>
+          <h3 style="color: #1a1612; font-family: Georgia, serif;">Services</h3>
+          <ul style="color: #3a3025;">${serviceList}</ul>
+          <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
+          <p style="color: #3a3025;">View your booking confirmation ticket and download your PDF pass:</p>
+          <p style="margin: 16px 0;"><a href="${siteUrl}/booking/confirmation" style="display: inline-block; padding: 12px 24px; background: #1a1612; color: #faf7f2; text-decoration: none; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase;">View Confirmation Ticket</a></p>
+          <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
+          <p style="color: #8a7766; font-size: 13px;">Questions? Contact us at <a href="mailto:${notifyEmail}" style="color: #b85a4e;">${notifyEmail}</a></p>
+        </div>
+      `;
     } else {
+      // Inquiry → email the admin
       subject = `New ${payload.inquiry_type ?? "general"} inquiry from ${payload.customer_name}`;
+      recipientEmail = notifyEmail;
       htmlBody = `
         <div style="font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #faf7f2;">
           <h2 style="color: #1a1612; font-family: Georgia, serif;">New Inquiry</h2>
@@ -115,7 +146,7 @@ Deno.serve(async (req: Request) => {
       `;
     }
 
-    // Try to send email via Resend if API key is configured
+    // Send email via Resend if API key is configured
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (resendKey) {
       const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -126,7 +157,7 @@ Deno.serve(async (req: Request) => {
         },
         body: JSON.stringify({
           from: "Fargo Salon <onboarding@resend.dev>",
-          to: [notifyEmail],
+          to: [recipientEmail],
           subject,
           html: htmlBody,
         }),
@@ -135,10 +166,9 @@ Deno.serve(async (req: Request) => {
       if (!emailResponse.ok) {
         const errText = await emailResponse.text();
         console.error("Email send failed:", errText);
-        // Still return success — the booking/inquiry was saved, email is secondary
       }
     } else {
-      console.log("No RESEND_API_KEY configured — notification email not sent. Payload logged for reference.");
+      console.log("No RESEND_API_KEY configured — notification email not sent. Payload:", JSON.stringify(payload));
     }
 
     return new Response(

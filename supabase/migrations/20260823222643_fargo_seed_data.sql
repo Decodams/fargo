@@ -7,7 +7,7 @@ staff, and default settings so the platform is usable immediately.
 1. Categories: Hair, Face & Body, Add-ons
 2. Services: full menu from the brief (15+ services)
 3. Products: 10 retail products
-4. Business hours: Tue–Sat 9–7, Sun 12–6, Mon closed
+4. Business hours: Mon–Sat 9–7, Sun 12–6
 5. Settings: business name, contact, home service area, notification email
 6. Staff: 4 sample stylists
 */
@@ -62,7 +62,7 @@ ON CONFLICT DO NOTHING;
 -- BUSINESS HOURS (0=Sunday, 1=Monday, ... 6=Saturday)
 INSERT INTO business_hours (day_of_week, open_time, close_time, is_closed) VALUES
   (0, '12:00', '18:00', false),
-  (1, '09:00', '18:00', true),
+  (1, '09:00', '19:00', false),
   (2, '09:00', '19:00', false),
   (3, '09:00', '19:00', false),
   (4, '09:00', '19:00', false),

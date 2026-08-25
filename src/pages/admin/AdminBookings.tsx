@@ -98,6 +98,37 @@ export default function AdminBookings() {
     if (data) {
       setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, confirmation_status: confirmationStatus as Booking['confirmation_status'], ...(confirmationStatus === 'confirmed' ? { status: 'confirmed' as Booking['status'] } : {}) } : b)));
       setSelected((prev) => prev && prev.id === bookingId ? { ...prev, confirmation_status: confirmationStatus as Booking['confirmation_status'], ...(confirmationStatus === 'confirmed' ? { status: 'confirmed' as Booking['status'] } : {}) } : prev);
+
+      // Send confirmation email to customer when admin confirms payment
+      if (confirmationStatus === 'confirmed' && data.customer_email) {
+        try {
+          // Fetch booking services for the email
+          const { data: bsData } = await supabase
+            .from('booking_services')
+            .select('service_name')
+            .eq('booking_id', bookingId);
+
+          const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
+          await fetch(fnUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}` },
+            body: JSON.stringify({
+              type: 'booking_confirmed',
+              reference: data.reference,
+              customer_name: data.customer_name,
+              customer_email: data.customer_email,
+              customer_phone: data.customer_phone,
+              service_mode: data.service_mode,
+              scheduled_at: data.scheduled_at,
+              duration_minutes: data.duration_minutes,
+              total_price: data.total_price,
+              services: bsData?.map((s) => s.service_name) ?? [],
+            }),
+          });
+        } catch {
+          // Email failure is non-critical — the booking was already confirmed
+        }
+      }
     }
   };
 

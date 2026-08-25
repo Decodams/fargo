@@ -27,10 +27,21 @@ export default function AdminLogin() {
         email: email.trim(),
         password,
       });
-      if (authError) throw authError;
+      if (authError) {
+        const msg = authError.message || authError.error_description || 'Invalid email or password';
+        setError(msg);
+        setLoading(false);
+        return;
+      }
       navigate('/admin');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'message' in err) {
+        setError((err as { message: string }).message);
+      } else if (typeof err === 'string') {
+        setError(err);
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
