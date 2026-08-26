@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { BusinessHour } from '@/types';
 import { DAY_SHORT } from '@/lib/utils';
+import { FALLBACK_BUSINESS_HOURS } from '@/lib/fallbackData';
 
 /**
  * Reveals an element on scroll by adding the `visible` class
@@ -71,7 +72,7 @@ function formatHourTime(time: string): string {
 }
 
 export function useBusinessHours() {
-  const [hours, setHours] = useState<BusinessHour[]>([]);
+  const [hours, setHours] = useState<BusinessHour[]>(FALLBACK_BUSINESS_HOURS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -79,9 +80,9 @@ export function useBusinessHours() {
     (async () => {
       try {
         const { data } = await supabase.from('business_hours').select('*').order('day_of_week');
-        if (active && data) setHours(data as BusinessHour[]);
+        if (active) setHours(data && data.length > 0 ? data as BusinessHour[] : FALLBACK_BUSINESS_HOURS);
       } catch {
-        // empty
+        if (active) setHours(FALLBACK_BUSINESS_HOURS);
       } finally {
         if (active) setLoading(false);
       }

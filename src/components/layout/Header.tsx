@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import logo from '@/image/Logo 2.png';
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
@@ -51,20 +52,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center gap-2 group" aria-label="Fargo home">
-            <span
-              className={`text-2xl font-display tracking-tight transition-colors duration-300 ${
-                solidHeader ? 'text-ink-900' : 'text-cream-50'
-              }`}
-            >
-              Fargo
-            </span>
-            <span
-              className={`hidden sm:block text-[10px] uppercase tracking-wider-3 transition-colors duration-300 ${
-                solidHeader ? 'text-ink-400' : 'text-cream-100/70'
-              }`}
-            >
-              Salon & Spa
-            </span>
+            <img src={logo} alt="Fargo Unisex Salon and Spa" className="h-12 w-auto object-contain" />
           </Link>
 
           {/* Desktop nav */}

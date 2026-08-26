@@ -24,6 +24,7 @@ export interface Staff {
   id: string;
   name: string;
   role: string;
+  image_url: string | null;
   bio: string | null;
   specialties: string | null;
   is_active: boolean;

@@ -45,13 +45,13 @@ export const FALLBACK_STAFF: Staff[] = [
 ];
 
 export const FALLBACK_BUSINESS_HOURS: BusinessHour[] = [
-  { id: 'bh-0', day_of_week: 0, open_time: '12:00', close_time: '18:00', is_closed: false },
-  { id: 'bh-1', day_of_week: 1, open_time: '09:00', close_time: '18:00', is_closed: true },
-  { id: 'bh-2', day_of_week: 2, open_time: '09:00', close_time: '19:00', is_closed: false },
-  { id: 'bh-3', day_of_week: 3, open_time: '09:00', close_time: '19:00', is_closed: false },
-  { id: 'bh-4', day_of_week: 4, open_time: '09:00', close_time: '19:00', is_closed: false },
-  { id: 'bh-5', day_of_week: 5, open_time: '09:00', close_time: '19:00', is_closed: false },
-  { id: 'bh-6', day_of_week: 6, open_time: '09:00', close_time: '19:00', is_closed: false },
+  { id: 'bh-0', day_of_week: 0, open_time: '11:00', close_time: '20:00', is_closed: false },
+  { id: 'bh-1', day_of_week: 1, open_time: '08:00', close_time: '21:00', is_closed: false },
+  { id: 'bh-2', day_of_week: 2, open_time: '08:00', close_time: '21:00', is_closed: false },
+  { id: 'bh-3', day_of_week: 3, open_time: '08:00', close_time: '21:00', is_closed: false },
+  { id: 'bh-4', day_of_week: 4, open_time: '08:00', close_time: '21:00', is_closed: false },
+  { id: 'bh-5', day_of_week: 5, open_time: '08:00', close_time: '21:00', is_closed: false },
+  { id: 'bh-6', day_of_week: 6, open_time: '08:00', close_time: '21:00', is_closed: false },
 ];
 
 export const FALLBACK_PRODUCTS: Product[] = [

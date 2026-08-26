@@ -90,7 +90,7 @@ export function useBookingTicket() {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(26, 22, 18);
     doc.text(mode === 'in_salon' ? 'In Salon' : 'Home Service', leftCol, y);
-    doc.text(`₦${total?.toLocaleString()} (${prepay ? 'Bank Transfer' : 'Pay After'})`, rightCol, y);
+    doc.text(`₦${total?.toLocaleString()} (Bank Transfer)`, rightCol, y);
     y += 14;
 
     // Services list

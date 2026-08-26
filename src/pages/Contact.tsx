@@ -182,13 +182,7 @@ export default function Contact() {
                         </li>
                       ))}
                     </ul>
-                  ) : (
-                    <ul className="space-y-2 text-sm text-ink-600">
-                      <li className="flex justify-between"><span>Tue – Sat</span><span>9:00 – 19:00</span></li>
-                      <li className="flex justify-between"><span>Sunday</span><span>12:00 – 18:00</span></li>
-                      <li className="flex justify-between"><span>Monday</span><span>Closed</span></li>
-                    </ul>
-                  )}
+                  ) : null}
                 </div>
 
                 <div className="mt-8 pt-8 border-t border-ink-100">

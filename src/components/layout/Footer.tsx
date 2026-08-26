@@ -3,6 +3,7 @@ import { Instagram, Facebook, Phone, Mail, MapPin, Clock } from 'lucide-react';
 import { useSettings, useBusinessHours } from '@/lib/hooks';
 import { getSetting } from '@/lib/utils';
 import TikTokIcon from '@/components/ui/TikTokIcon';
+import logo from '@/image/Logo 2.png';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -34,7 +35,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <h3 className="text-3xl font-display text-cream-50 mb-3">Fargo</h3>
+            <img src={logo} alt="Fargo Unisex Salon and Spa" className="h-20 w-auto object-contain mb-3" />
             <p className="text-sm leading-relaxed text-ink-300 max-w-xs">
               A unisex hair, beauty, and wellness destination. In-salon and at-home,
               built around how you live.
@@ -121,13 +122,7 @@ export default function Footer() {
                   </li>
                 ))}
               </ul>
-            ) : (
-              <ul className="space-y-2.5 text-sm text-ink-300">
-                <li className="flex justify-between gap-4"><span>Tue – Sat</span><span className="text-ink-400">9:00 – 19:00</span></li>
-                <li className="flex justify-between gap-4"><span>Sunday</span><span className="text-ink-400">12:00 – 18:00</span></li>
-                <li className="flex justify-between gap-4"><span>Monday</span><span className="text-ink-400">Closed</span></li>
-              </ul>
-            )}
+            ) : null}
             <Link
               to="/booking"
               className="inline-flex items-center justify-center mt-6 px-5 py-2.5 border border-ink-700 text-xs uppercase tracking-wider-2 hover:border-rose-400 hover:text-rose-400 transition-colors"
@@ -139,7 +134,7 @@ export default function Footer() {
 
         <div className="border-t border-ink-800 mt-14 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-ink-500">
-            © {new Date().getFullYear()} Fargo Unisex Salon & Spa. All rights reserved.
+            © 2026 Fargo Unisex Salon & Spa. Site by Cedoka Global Limited.
           </p>
           <div className="flex items-center gap-5">
             <Link to="/faq" className="text-xs text-ink-500 hover:text-ink-300 transition-colors">

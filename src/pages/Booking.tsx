@@ -64,7 +64,7 @@ export default function Booking() {
     customerPhone: '',
     homeAddress: '',
     notes: '',
-    prepay: false,
+    prepay: true,
     partySize: 1,
     distanceZoneId: null,
   });
@@ -327,8 +327,8 @@ export default function Booking() {
         travel_fee: travelFee,
         discount_amount: discountAmount,
         party_size: Number(state.partySize) || 1,
-        payment_status: state.prepay ? 'prepaid' : 'unpaid',
-        confirmation_status: state.prepay ? 'pending' : 'confirmed',
+        payment_status: 'prepaid',
+        confirmation_status: 'pending',
         status: 'pending',
         notes: state.notes.trim() || null,
       };
@@ -368,7 +368,7 @@ export default function Booking() {
               services: state.selectedServices.map((s) => s.name),
               home_address: state.mode === 'home' ? state.homeAddress.trim() : null,
               notes: state.notes.trim() || null,
-              confirmation_status: state.prepay ? 'pending' : 'confirmed',
+              confirmation_status: 'pending',
             }),
           });
         } catch {
@@ -393,7 +393,7 @@ export default function Booking() {
           discount_amount: discountAmount,
           party_size: state.partySize,
           prepay: state.prepay,
-          confirmation_status: state.prepay ? 'pending' : 'confirmed',
+          confirmation_status: 'pending',
           customer_email: state.customerEmail,
           bank_name: bankName,
           account_number: accountNumber,
@@ -755,14 +755,7 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
 
               <div className="space-y-3">
                 <PaymentOption
-                  active={!state.prepay}
-                  onClick={() => update({ prepay: false })}
-                  icon={<Clock size={20} />}
-                  title="Pay after appointment"
-                  desc="Pay in person at the salon or on-site for home service. Your booking is confirmed immediately."
-                />
-                <PaymentOption
-                  active={state.prepay}
+                  active
                   onClick={() => update({ prepay: true })}
                   icon={<CreditCard size={20} />}
                   title="Pay now (Bank Transfer)"

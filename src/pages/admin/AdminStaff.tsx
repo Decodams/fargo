@@ -8,13 +8,14 @@ interface EditState {
   id?: string;
   name: string;
   role: string;
+  image_url: string;
   bio: string;
   specialties: string;
   is_active: boolean;
 }
 
 const EMPTY: EditState = {
-  name: '', role: '', bio: '', specialties: '', is_active: true,
+  name: '', role: '', image_url: '', bio: '', specialties: '', is_active: true,
 };
 
 export default function AdminStaff() {
@@ -22,6 +23,7 @@ export default function AdminStaff() {
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('staff').select('*').order('name', { ascending: true });
@@ -38,6 +40,7 @@ export default function AdminStaff() {
       const data = {
         name: editing.name.trim(),
         role: editing.role.trim(),
+        image_url: editing.image_url.trim() || null,
         bio: editing.bio.trim() || null,
         specialties: editing.specialties.trim() || null,
         is_active: editing.is_active,
@@ -55,6 +58,24 @@ export default function AdminStaff() {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!editing) return;
+    setUploading(true);
+    setError('');
+    try {
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from('staff-images').upload(path, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('staff-images').getPublicUrl(path);
+      setEditing((current) => current ? { ...current, image_url: data.publicUrl } : current);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Image upload failed');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -84,7 +105,16 @@ export default function AdminStaff() {
             <Field label="Role" value={editing.role} onChange={(v) => setEditing({ ...editing, role: v })} />
             <Field label="Specialties" value={editing.specialties} onChange={(v) => setEditing({ ...editing, specialties: v })} />
           </div>
-          <div>
+              <div>
+                <label className="label-text">Staff image (optional)</label>
+                <input type="file" accept="image/*" disabled={uploading} onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleImageUpload(file);
+                  e.target.value = '';
+                }} className="input-field file:mr-3 file:border-0 file:bg-ink-900 file:px-3 file:py-1.5 file:text-cream-50" />
+                {editing.image_url && <img src={editing.image_url} alt="Staff preview" className="mt-3 h-24 w-24 object-cover border border-ink-100" />}
+              </div>
+              <div>
             <label className="label-text">Bio</label>
             <textarea value={editing.bio} onChange={(e) => setEditing({ ...editing, bio: e.target.value })} rows={3} className="input-field resize-y" />
           </div>
@@ -110,7 +140,7 @@ export default function AdminStaff() {
               {s.is_active ? 'Active' : 'Hidden'}
             </span>
             <div className="flex items-center gap-1 shrink-0">
-              <button onClick={() => setEditing({ id: s.id, name: s.name, role: s.role, bio: s.bio ?? '', specialties: s.specialties ?? '', is_active: s.is_active })} className="p-2 text-ink-400 hover:text-ink-900"><Pencil size={16} /></button>
+              <button onClick={() => setEditing({ id: s.id, name: s.name, role: s.role, image_url: s.image_url ?? '', bio: s.bio ?? '', specialties: s.specialties ?? '', is_active: s.is_active })} className="p-2 text-ink-400 hover:text-ink-900"><Pencil size={16} /></button>
               <button onClick={() => handleDelete(s.id)} className="p-2 text-ink-400 hover:text-rose-500"><Trash2 size={16} /></button>
             </div>
           </Card>

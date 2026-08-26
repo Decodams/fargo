@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import logo from '@/image/Logo 2.png';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -61,7 +62,7 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-ink-900 px-4 sm:px-5">
       <div className="w-full max-w-sm">
         <Link to="/" className="block text-center mb-8 sm:mb-10">
-          <span className="text-3xl font-display text-cream-50">Fargo</span>
+          <img src={logo} alt="Fargo Unisex Salon and Spa" className="h-24 w-auto mx-auto object-contain" />
           <p className="text-xs uppercase tracking-wider-3 text-ink-400 mt-1">Staff Portal</p>
         </Link>
 

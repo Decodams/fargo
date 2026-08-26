@@ -6,13 +6,42 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<boolean | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    const timeoutMs = 3 * 60 * 1000;
+    const activityKey = 'fargo_admin_last_active';
+    const markActive = () => localStorage.setItem(activityKey, String(Date.now()));
+    const expireIfInactive = async () => {
+      const lastActive = Number(localStorage.getItem(activityKey) || 0);
+      if (lastActive && Date.now() - lastActive >= timeoutMs) {
+        await supabase.auth.signOut();
+        localStorage.removeItem(activityKey);
+        setSession(false);
+        return;
+      }
+      markActive();
+      const { data } = await supabase.auth.getSession();
       setSession(!!data.session);
-    });
+    };
+
+    void expireIfInactive();
+    const activityEvents = ['click', 'keydown', 'pointermove', 'touchstart'];
+    activityEvents.forEach((event) => window.addEventListener(event, markActive));
+    const timer = window.setInterval(() => {
+      const lastActive = Number(localStorage.getItem(activityKey) || 0);
+      if (lastActive && Date.now() - lastActive >= timeoutMs) {
+        void supabase.auth.signOut();
+        localStorage.removeItem(activityKey);
+        setSession(false);
+      }
+    }, 15000);
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       setSession(!!sess);
+      if (sess) markActive();
     });
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      window.clearInterval(timer);
+      activityEvents.forEach((event) => window.removeEventListener(event, markActive));
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   if (session === null) {

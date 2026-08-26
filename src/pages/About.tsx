@@ -100,9 +100,11 @@ export default function About() {
               <Reveal key={member.id} delay={i * 80}>
                 <div className="group">
                   <div className="w-full aspect-[3/4] bg-ink-900 mb-4 overflow-hidden">
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-ink-800 to-ink-900">
-                      <span className="text-6xl font-display text-cream-50/30">{member.name.charAt(0)}</span>
-                    </div>
+                    {member.image_url ? <img src={member.image_url} alt={member.name} className="w-full h-full object-cover" /> : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-ink-800 to-ink-900">
+                        <span className="text-6xl font-display text-cream-50/30">{member.name.charAt(0)}</span>
+                      </div>
+                    )}
                   </div>
                   <h3 className="text-xl font-display text-ink-900">{member.name}</h3>
                   <p className="text-xs uppercase tracking-wider-2 text-rose-500 mt-1">{member.role}</p>

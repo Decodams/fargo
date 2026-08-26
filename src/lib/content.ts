@@ -82,11 +82,11 @@ export const DEFAULT_FAQ: FaqSection[] = [
     items: [
       {
         q: 'Do I need to pay when booking?',
-        a: 'No. Payment is optional at booking. You can pay in person after your appointment, or pre-pay online.',
+        a: 'Yes. Complete the bank transfer after booking and wait for our team to confirm your payment before your booking ticket is released.',
       },
       {
         q: 'What payment methods do you accept?',
-        a: 'We accept card payments online and cash or card in person. Home service payment is collected on-site unless pre-paid.',
+        a: 'We currently accept bank transfer for booking confirmation. Your appointment is confirmed after payment is verified by our team.',
       },
       {
         q: 'What is your cancellation policy?',

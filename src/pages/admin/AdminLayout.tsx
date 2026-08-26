@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, CalendarDays, MessageSquare, Scissors, Package, Users, Settings, LogOut, Menu, X, Search, Folder, MessageCircle, DollarSign } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import TikTokIcon from '@/components/ui/TikTokIcon';
+import logo from '@/image/Logo 2.png';
 
 const NAV = [
   { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -24,6 +25,27 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [bookingAlert, setBookingAlert] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      void Notification.requestPermission();
+    }
+
+    const channel = supabase
+      .channel('admin-booking-alerts')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bookings' }, (payload) => {
+        const booking = payload.new as { customer_name?: string; reference?: string };
+        const message = `New booking from ${booking.customer_name ?? 'a customer'}${booking.reference ? ` (${booking.reference})` : ''}`;
+        setBookingAlert(message);
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          new Notification('Fargo: New Booking', { body: message });
+        }
+      })
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  }, []);
 
   const currentLabel = NAV.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to) && n.to !== '/admin'))?.label ?? 'Overview';
 
@@ -40,7 +62,7 @@ export default function AdminLayout() {
       <aside className="hidden lg:flex flex-col w-60 bg-ink-900 text-cream-100 fixed inset-y-0 left-0 z-40">
         <div className="p-6 border-b border-ink-700">
           <Link to="/admin" className="block">
-            <span className="text-2xl font-display text-cream-50">Fargo</span>
+            <img src={logo} alt="Fargo Unisex Salon and Spa" className="h-16 w-auto object-contain" />
             <p className="text-[10px] uppercase tracking-wider-3 text-ink-400 mt-1">Admin Panel</p>
           </Link>
         </div>
@@ -86,7 +108,7 @@ export default function AdminLayout() {
         }`}
       >
         <div className="p-6 border-b border-ink-700 flex items-center justify-between">
-          <span className="text-2xl font-display text-cream-50">Fargo</span>
+          <img src={logo} alt="Fargo Unisex Salon and Spa" className="h-16 w-auto object-contain" />
           <button onClick={closeSidebar} className="text-ink-400 hover:text-cream-50 transition-colors">
             <X size={22} />
           </button>
@@ -132,6 +154,12 @@ export default function AdminLayout() {
         </header>
 
         <main className="p-4 lg:p-8">
+          {bookingAlert && (
+            <div role="status" className="mb-5 flex items-center justify-between gap-4 border border-olive-200 bg-olive-50 px-4 py-3 text-sm text-olive-800">
+              <span>{bookingAlert}</span>
+              <button onClick={() => setBookingAlert(null)} className="shrink-0 text-xs uppercase tracking-wider-2 hover:text-ink-900">Dismiss</button>
+            </div>
+          )}
           <Outlet />
         </main>
       </div>
