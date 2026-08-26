@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, Home as HomeIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatPriceRange, formatDuration } from '@/lib/utils';
+import { formatPrice, formatDuration } from '@/lib/utils';
 import type { Service, Category } from '@/types';
 import { FALLBACK_SERVICES, FALLBACK_CATEGORIES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
@@ -17,8 +17,8 @@ export default function Services() {
   useEffect(() => {
     (async () => {
       const [{ data: cats }, { data: svcs }] = await Promise.all([
-        supabase.from('categories').select('*').order('display_order'),
-        supabase.from('services').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('categories').select('*').order('name', { ascending: true }),
+        supabase.from('services').select('*').eq('is_active', true).order('name', { ascending: true }),
       ]);
       setCategories(withFallback(cats as Category[] | null, FALLBACK_CATEGORIES));
       setServices(withFallback(svcs as Service[] | null, FALLBACK_SERVICES));
@@ -112,7 +112,7 @@ export default function Services() {
                         {formatDuration(service.duration_minutes)}
                       </div>
                       <div className="md:col-span-2 text-sm text-ink-700">
-                        {formatPriceRange(service.price_min, service.price_max)}
+                        {formatPrice(service.price)}
                       </div>
                       <div className="md:col-span-2 flex items-center justify-between md:justify-end gap-4">
                         {service.home_service_eligible && (

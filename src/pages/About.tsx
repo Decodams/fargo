@@ -17,7 +17,7 @@ export default function About() {
       .from('staff')
       .select('*')
       .eq('is_active', true)
-      .order('display_order')
+      .order('name', { ascending: true })
       .then(({ data }) => setStaff(withFallback(data as Staff[] | null, FALLBACK_STAFF)));
   }, []);
 

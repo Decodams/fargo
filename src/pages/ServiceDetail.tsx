@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, Clock, Home as HomeIcon, Check, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatPriceRange, formatDuration } from '@/lib/utils';
+import { formatPrice, formatDuration } from '@/lib/utils';
 import { IMAGES } from '@/lib/images';
 import type { Service, Category, Staff } from '@/types';
 import { FALLBACK_SERVICES, FALLBACK_CATEGORIES, FALLBACK_STAFF } from '@/lib/fallbackData';
@@ -129,7 +129,7 @@ export default function ServiceDetail() {
     <>
       <PageMeta
         title={service.name}
-        description={service.description || `${service.name} at Fargo Unisex Salon & Spa. ${formatPriceRange(service.price_min, service.price_max)} — ${formatDuration(service.duration_minutes)}.`}
+        description={service.description || `${service.name} at Fargo Unisex Salon & Spa. ${formatPrice(service.price)} — ${formatDuration(service.duration_minutes)}.`}
         path={`/services/${service.slug}`}
       />
       {/* Breadcrumb */}
@@ -166,9 +166,9 @@ export default function ServiceDetail() {
                   </p>
                 </div>
                 <div className="bg-cream-50 p-5">
-                  <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-2">Price Range</p>
+                  <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-2">Price</p>
                   <p className="text-lg font-display text-ink-900">
-                    {formatPriceRange(service.price_min, service.price_max)}
+                    {formatPrice(service.price)}
                   </p>
                 </div>
               </div>
@@ -255,7 +255,7 @@ export default function ServiceDetail() {
                   </h3>
                   <div className="mt-3 flex items-center justify-between text-sm text-ink-500">
                     <span className="flex items-center gap-1.5"><Clock size={14} /> {formatDuration(rel.duration_minutes)}</span>
-                    <span className="text-ink-700">{formatPriceRange(rel.price_min, rel.price_max)}</span>
+                    <span className="text-ink-700">{formatPrice(rel.price)}</span>
                   </div>
                 </Link>
               ))}

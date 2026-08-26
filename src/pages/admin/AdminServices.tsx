@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Plus, Pencil, Trash2, X, Home as HomeIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatPriceRange, formatDuration } from '@/lib/utils';
+import { formatPrice, formatDuration } from '@/lib/utils';
 import type { Service, Category } from '@/types';
 
 interface EditState {
@@ -10,18 +10,16 @@ interface EditState {
   slug: string;
   description: string;
   category_id: string;
-  duration_minutes: number;
-  price_min: number;
-  price_max: number;
+  duration_minutes: number | string;
+  price: number | string;
   home_service_eligible: boolean;
   per_person: boolean;
   is_active: boolean;
-  display_order: number;
 }
 
 const EMPTY: EditState = {
   name: '', slug: '', description: '', category_id: '', duration_minutes: 60,
-  price_min: 0, price_max: 0, home_service_eligible: false, per_person: false, is_active: true, display_order: 0,
+  price: '', home_service_eligible: false, per_person: false, is_active: true,
 };
 
 export default function AdminServices() {
@@ -33,8 +31,8 @@ export default function AdminServices() {
 
   const load = useCallback(async () => {
     const [{ data: svcs }, { data: cats }] = await Promise.all([
-      supabase.from('services').select('*').order('display_order'),
-      supabase.from('categories').select('*').order('display_order'),
+      supabase.from('services').select('*').order('name', { ascending: true }),
+      supabase.from('categories').select('*').order('name', { ascending: true }),
     ]);
     setServices((svcs ?? []) as Service[]);
     setCategories((cats ?? []) as Category[]);
@@ -54,14 +52,12 @@ export default function AdminServices() {
         name: editing.name.trim(),
         slug: editing.slug || slugify(editing.name),
         description: editing.description.trim() || null,
-        category_id: editing.category_id || null,
-        duration_minutes: Number(editing.duration_minutes),
-        price_min: Number(editing.price_min),
-        price_max: Number(editing.price_max),
+        category_id: editing.category_id,
+        duration_minutes: Number(editing.duration_minutes) || 0,
+        price: Number(editing.price) || 0,
         home_service_eligible: editing.home_service_eligible,
         per_person: editing.per_person,
         is_active: editing.is_active,
-        display_order: Number(editing.display_order),
       };
 
       if (editing.id) {
@@ -89,10 +85,10 @@ export default function AdminServices() {
   const startEdit = (svc: Service) => {
     setEditing({
       id: svc.id, name: svc.name, slug: svc.slug, description: svc.description ?? '',
-      category_id: svc.category_id ?? '', duration_minutes: svc.duration_minutes,
-      price_min: svc.price_min, price_max: svc.price_max,
+      category_id: svc.category_id, duration_minutes: svc.duration_minutes,
+      price: svc.price,
       home_service_eligible: svc.home_service_eligible, per_person: svc.per_person,
-      is_active: svc.is_active, display_order: svc.display_order,
+      is_active: svc.is_active,
     });
   };
 
@@ -119,7 +115,7 @@ export default function AdminServices() {
                   {svc.home_service_eligible && <HomeIcon size={13} className="text-olive-600" />}
                 </div>
                 <p className="text-xs text-ink-500">
-                  {cat?.name ?? 'Uncategorized'} • {formatDuration(svc.duration_minutes)} • {formatPriceRange(svc.price_min, svc.price_max)}
+                  {cat?.name ?? 'Uncategorized'} • {formatDuration(svc.duration_minutes)} • {formatPrice(svc.price)}
                 </p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
@@ -138,7 +134,7 @@ export default function AdminServices() {
       {/* Edit modal */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-ink-900/40" onClick={() => setEditing(null)} />
+          <div className="absolute inset-0 bg-ink-900/40" aria-hidden="true" />
           <div className="relative bg-cream-50 w-full sm:max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto p-5 sm:p-6 rounded-t-xl sm:rounded-none">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base lg:text-lg font-display text-ink-900">{editing.id ? 'Edit Service' : 'New Service'}</h2>
@@ -161,34 +157,24 @@ export default function AdminServices() {
                   <label className="label-text">Category</label>
                   <select value={editing.category_id} onChange={(e) => setEditing({ ...editing, category_id: e.target.value })}
                     className="input-field">
-                    <option value="">— None —</option>
+                    <option value="">Select category</option>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="label-text">Duration (min)</label>
-                  <input type="number" value={editing.duration_minutes} onChange={(e) => setEditing({ ...editing, duration_minutes: Number(e.target.value) })}
+                  <input type="number" value={editing.duration_minutes} onChange={(e) => setEditing({ ...editing, duration_minutes: e.target.value })}
                     className="input-field" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label-text">Price Min</label>
-                  <input type="number" value={editing.price_min} onChange={(e) => setEditing({ ...editing, price_min: Number(e.target.value) })}
-                    className="input-field" />
-                </div>
-                <div>
-                  <label className="label-text">Price Max</label>
-                  <input type="number" value={editing.price_max} onChange={(e) => setEditing({ ...editing, price_max: Number(e.target.value) })}
+                  <label className="label-text">Price</label>
+                  <input type="number" min={0} required value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })}
                     className="input-field" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label-text">Display Order</label>
-                  <input type="number" value={editing.display_order} onChange={(e) => setEditing({ ...editing, display_order: Number(e.target.value) })}
-                    className="input-field" />
-                </div>
                 <div className="flex items-end gap-4 pb-2">
                   <label className="flex items-center gap-2 text-sm text-ink-700">
                     <input type="checkbox" checked={editing.home_service_eligible} onChange={(e) => setEditing({ ...editing, home_service_eligible: e.target.checked })} />
@@ -208,7 +194,7 @@ export default function AdminServices() {
               {error && <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 px-4 py-3">{error}</p>}
 
               <div className="flex gap-3 pt-2">
-                <button onClick={handleSave} disabled={saving || !editing.name.trim()}
+                <button onClick={handleSave} disabled={saving || !editing.name.trim() || !editing.category_id || editing.price === ''}
                   className="btn-primary flex-1">
                   {saving ? 'Saving...' : 'Save'}
                 </button>

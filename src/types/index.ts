@@ -7,13 +7,12 @@ export interface Category {
 
 export interface Service {
   id: string;
-  category_id: string | null;
+  category_id: string;
   name: string;
   slug: string;
   description: string | null;
   duration_minutes: number;
-  price_min: number;
-  price_max: number;
+  price: number;
   home_service_eligible: boolean;
   per_person: boolean;
   is_active: boolean;
@@ -93,6 +92,7 @@ export interface Product {
   id: string;
   name: string;
   slug: string;
+  category_id: string | null;
   category: string | null;
   description: string | null;
   price: number | null;

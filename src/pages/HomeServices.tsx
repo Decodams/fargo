@@ -3,7 +3,7 @@ import { ArrowRight, Home as HomeIcon, MapPin, Clock, Car } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import { useSettings, useBusinessHours } from '@/lib/hooks';
-import { getSetting, formatPrice, formatPriceRange, formatDuration } from '@/lib/utils';
+import { getSetting, formatPrice, formatDuration } from '@/lib/utils';
 import type { Service } from '@/types';
 import { IMAGES } from '@/lib/images';
 import { FALLBACK_SERVICES, withFallback } from '@/lib/fallbackData';
@@ -22,7 +22,7 @@ export default function HomeServices() {
       .select('*')
       .eq('is_active', true)
       .eq('home_service_eligible', true)
-      .order('display_order')
+      .order('name', { ascending: true })
       .then(({ data }) => {
         const rows = withFallback(data as Service[] | null, FALLBACK_SERVICES);
         setHomeServices(rows.filter((s) => s.home_service_eligible));
@@ -138,7 +138,7 @@ export default function HomeServices() {
                     </h3>
                     <div className="flex items-center gap-4 mt-2 text-xs text-ink-500">
                       <span className="flex items-center gap-1"><Clock size={13} /> {formatDuration(service.duration_minutes)}</span>
-                      <span>{formatPriceRange(service.price_min, service.price_max)}</span>
+                      <span>{formatPrice(service.price)}</span>
                     </div>
                   </div>
                   <ArrowRight size={18} className="text-ink-300 group-hover:text-rose-500 group-hover:translate-x-1 transition-all shrink-0" />

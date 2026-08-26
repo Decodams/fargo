@@ -6,11 +6,10 @@ import type { SettingsMap } from '@/types';
 interface DistanceZone {
   id: string;
   name: string;
-  min_km: number;
-  max_km: number | null;
-  fee: number;
+  min_km: number | string | null;
+  max_km: number | string | null;
+  fee: number | string | null;
   is_active: boolean;
-  display_order: number;
 }
 
 const EMPTY_ZONE: Omit<DistanceZone, 'id'> = {
@@ -19,13 +18,11 @@ const EMPTY_ZONE: Omit<DistanceZone, 'id'> = {
   max_km: null,
   fee: 0,
   is_active: true,
-  display_order: 0,
 };
 
 export default function AdminPricing() {
   const [zones, setZones] = useState<DistanceZone[]>([]);
   const [settings, setSettings] = useState<SettingsMap>({});
-  const [addingZone, setAddingZone] = useState(false);
   const [editZone, setEditZone] = useState<Omit<DistanceZone, 'id'> | null>(null);
   const [editZoneId, setEditZoneId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -34,7 +31,7 @@ export default function AdminPricing() {
   useEffect(() => {
     (async () => {
       const [{ data: zData }, { data: sData }] = await Promise.all([
-        supabase.from('distance_zones').select('*').order('display_order'),
+        supabase.from('distance_zones').select('*').order('name', { ascending: true }),
         supabase.from('settings').select('key, value'),
       ]);
       setZones((zData ?? []) as DistanceZone[]);
@@ -65,12 +62,12 @@ export default function AdminPricing() {
   };
 
   const handleStartAdd = () => {
-    setEditZone({ ...EMPTY_ZONE, display_order: zones.length });
+    setEditZone({ ...EMPTY_ZONE });
     setEditZoneId('__new__');
   };
 
   const handleStartEdit = (zone: DistanceZone) => {
-    setEditZone({ name: zone.name, min_km: zone.min_km, max_km: zone.max_km, fee: zone.fee, is_active: zone.is_active, display_order: zone.display_order });
+    setEditZone({ name: zone.name, min_km: zone.min_km, max_km: zone.max_km, fee: zone.fee, is_active: zone.is_active });
     setEditZoneId(zone.id);
   };
 
@@ -87,11 +84,10 @@ export default function AdminPricing() {
       max_km: editZone.max_km === null || editZone.max_km === ('' as unknown as number) ? null : Number(editZone.max_km),
       fee: Number(editZone.fee),
       is_active: editZone.is_active,
-      display_order: Number(editZone.display_order),
     };
     if (editZoneId === '__new__') {
       const { data } = await supabase.from('distance_zones').insert(payload).select().single();
-      if (data) setZones((prev) => [...prev, data as DistanceZone].sort((a, b) => a.display_order - b.display_order));
+      if (data) setZones((prev) => [...prev, data as DistanceZone].sort((a, b) => a.name.localeCompare(b.name)));
     } else {
       await supabase.from('distance_zones').update(payload).eq('id', editZoneId);
       setZones((prev) => prev.map((z) => (z.id === editZoneId ? { ...z, ...payload } : z)));
@@ -134,7 +130,7 @@ export default function AdminPricing() {
         <p className="text-sm text-ink-500 mb-4">Define fees based on distance from the salon.</p>
 
         <div className="space-y-2">
-          {zones.map((zone, idx) => {
+          {zones.map((zone) => {
             if (editZoneId === zone.id) return null;
             return (
               <div key={zone.id} className="bg-cream-50 border border-ink-100 p-4 flex items-center justify-between gap-4">
@@ -144,7 +140,7 @@ export default function AdminPricing() {
                     {!zone.is_active && <span className="text-xs text-ink-400">(inactive)</span>}
                   </div>
                   <p className="text-xs text-ink-500">
-                    {zone.min_km}–{zone.max_km !== null ? `${zone.max_km}` : '∞'} km • ₦{zone.fee.toLocaleString()}
+                    {zone.min_km}–{zone.max_km !== null ? `${zone.max_km}` : '∞'} km • ₦{Number(zone.fee) || 0}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -282,7 +278,7 @@ function ZoneEditRow({
         </div>
         <div>
           <label className="label-text">Min km</label>
-          <input type="number" min={0} value={zone.min_km} onChange={(e) => onChange('min_km', Number(e.target.value))} className="input-field" />
+              <input type="number" min={0} value={zone.min_km} onChange={(e) => onChange('min_km', e.target.value === '' ? null : Number(e.target.value))} className="input-field" />
         </div>
         <div>
           <label className="label-text">Max km</label>
@@ -290,11 +286,7 @@ function ZoneEditRow({
         </div>
         <div>
           <label className="label-text">Fee (₦)</label>
-          <input type="number" min={0} value={zone.fee} onChange={(e) => onChange('fee', Number(e.target.value))} className="input-field" />
-        </div>
-        <div>
-          <label className="label-text">Order</label>
-          <input type="number" min={0} value={zone.display_order} onChange={(e) => onChange('display_order', Number(e.target.value))} className="input-field" />
+              <input type="number" min={0} value={zone.fee} onChange={(e) => onChange('fee', e.target.value === '' ? null : Number(e.target.value))} className="input-field" />
         </div>
       </div>
       <div className="flex items-center gap-3">

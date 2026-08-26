@@ -11,11 +11,10 @@ interface EditState {
   bio: string;
   specialties: string;
   is_active: boolean;
-  display_order: number;
 }
 
 const EMPTY: EditState = {
-  name: '', role: '', bio: '', specialties: '', is_active: true, display_order: 0,
+  name: '', role: '', bio: '', specialties: '', is_active: true,
 };
 
 export default function AdminStaff() {
@@ -25,7 +24,7 @@ export default function AdminStaff() {
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from('staff').select('*').order('display_order');
+    const { data } = await supabase.from('staff').select('*').order('name', { ascending: true });
     setStaff((data ?? []) as Staff[]);
   }, []);
 
@@ -42,7 +41,6 @@ export default function AdminStaff() {
         bio: editing.bio.trim() || null,
         specialties: editing.specialties.trim() || null,
         is_active: editing.is_active,
-        display_order: Number(editing.display_order),
       };
       if (editing.id) {
         const { error: e } = await supabase.from('staff').update(data).eq('id', editing.id);
@@ -70,7 +68,7 @@ export default function AdminStaff() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-ink-500">Manage specialists shown on About and Booking pages.</p>
-        <button onClick={() => setEditing({ ...EMPTY, display_order: staff.length })} className="btn-primary shrink-0">
+        <button onClick={() => setEditing({ ...EMPTY })} className="btn-primary shrink-0">
           <Plus size={15} /> Add Member
         </button>
       </div>
@@ -85,7 +83,6 @@ export default function AdminStaff() {
             <Field label="Name" value={editing.name} onChange={(v) => setEditing({ ...editing, name: v })} />
             <Field label="Role" value={editing.role} onChange={(v) => setEditing({ ...editing, role: v })} />
             <Field label="Specialties" value={editing.specialties} onChange={(v) => setEditing({ ...editing, specialties: v })} />
-            <Field label="Display Order" value={String(editing.display_order)} onChange={(v) => setEditing({ ...editing, display_order: Number(v) || 0 })} />
           </div>
           <div>
             <label className="label-text">Bio</label>
@@ -113,7 +110,7 @@ export default function AdminStaff() {
               {s.is_active ? 'Active' : 'Hidden'}
             </span>
             <div className="flex items-center gap-1 shrink-0">
-              <button onClick={() => setEditing({ id: s.id, name: s.name, role: s.role, bio: s.bio ?? '', specialties: s.specialties ?? '', is_active: s.is_active, display_order: s.display_order })} className="p-2 text-ink-400 hover:text-ink-900"><Pencil size={16} /></button>
+              <button onClick={() => setEditing({ id: s.id, name: s.name, role: s.role, bio: s.bio ?? '', specialties: s.specialties ?? '', is_active: s.is_active })} className="p-2 text-ink-400 hover:text-ink-900"><Pencil size={16} /></button>
               <button onClick={() => handleDelete(s.id)} className="p-2 text-ink-400 hover:text-rose-500"><Trash2 size={16} /></button>
             </div>
           </Card>

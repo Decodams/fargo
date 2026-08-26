@@ -52,11 +52,6 @@ export function formatPrice(value: number, symbol = '₦'): string {
   return `${symbol}${value.toLocaleString('en-NG')}`;
 }
 
-export function formatPriceRange(min: number, max: number, symbol = '₦'): string {
-  if (min === max) return formatPrice(min, symbol);
-  return `${formatPrice(min, symbol)} – ${formatPrice(max, symbol)}`;
-}
-
 export function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);

@@ -2,33 +2,39 @@ import { useEffect, useState, useCallback } from 'react';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrice } from '@/lib/utils';
-import type { Product } from '@/types';
+import type { Category, Product } from '@/types';
 
 interface EditState {
   id?: string;
   name: string;
   slug: string;
+  category_id: string;
   category: string;
   description: string;
   price: number | string;
   image_url: string;
   is_active: boolean;
-  display_order: number;
 }
 
 const EMPTY: EditState = {
-  name: '', slug: '', category: '', description: '', price: '', image_url: '', is_active: true, display_order: 0,
+  name: '', slug: '', category_id: '', category: '', description: '', price: '', image_url: '', is_active: true,
 };
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [editing, setEditing] = useState<EditState | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from('products').select('*').order('display_order');
+    const [{ data }, { data: categoryData }] = await Promise.all([
+      supabase.from('products').select('*').order('name', { ascending: true }),
+      supabase.from('categories').select('*').order('name', { ascending: true }),
+    ]);
     setProducts((data ?? []) as Product[]);
+    setCategories((categoryData ?? []) as Category[]);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -43,12 +49,12 @@ export default function AdminProducts() {
       const data: Record<string, unknown> = {
         name: editing.name.trim(),
         slug: editing.slug || slugify(editing.name),
+        category_id: editing.category_id || null,
         category: editing.category.trim() || null,
         description: editing.description.trim() || null,
         price: editing.price ? Number(editing.price) : null,
         image_url: editing.image_url.trim() || null,
         is_active: editing.is_active,
-        display_order: Number(editing.display_order),
       };
       if (editing.id) {
         const { error: e } = await supabase.from('products').update(data).eq('id', editing.id);
@@ -63,6 +69,27 @@ export default function AdminProducts() {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!editing) return;
+    setUploading(true);
+    setError('');
+    try {
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from('product-images').upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+      setEditing((current) => current ? { ...current, image_url: data.publicUrl } : current);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Image upload failed');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -91,7 +118,7 @@ export default function AdminProducts() {
                 <p className="text-xs text-ink-400">{p.category ?? 'Uncategorized'}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <button onClick={() => setEditing({ id: p.id, name: p.name, slug: p.slug, category: p.category ?? '', description: p.description ?? '', price: p.price ?? '', image_url: p.image_url ?? '', is_active: p.is_active, display_order: p.display_order })}
+                <button onClick={() => setEditing({ id: p.id, name: p.name, slug: p.slug, category_id: p.category_id ?? '', category: p.category ?? '', description: p.description ?? '', price: p.price ?? '', image_url: p.image_url ?? '', is_active: p.is_active })}
                   className="p-1.5 text-ink-500 hover:text-ink-900 transition-colors"><Pencil size={15} /></button>
                 <button onClick={() => handleDelete(p.id)} className="p-1.5 text-ink-500 hover:text-rose-500 transition-colors"><Trash2 size={15} /></button>
               </div>
@@ -104,7 +131,7 @@ export default function AdminProducts() {
 
       {editing && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-ink-900/40" onClick={() => setEditing(null)} />
+          <div className="absolute inset-0 bg-ink-900/40" aria-hidden="true" />
           <div className="relative bg-cream-50 w-full sm:max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-y-auto p-5 sm:p-6 rounded-t-xl sm:rounded-none">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base lg:text-lg font-display text-ink-900">{editing.id ? 'Edit Product' : 'New Product'}</h2>
@@ -119,8 +146,11 @@ export default function AdminProducts() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label-text">Category</label>
-                  <input type="text" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })}
-                    className="input-field" placeholder="e.g. Hair Care" />
+                  <select value={editing.category_id} onChange={(e) => setEditing({ ...editing, category_id: e.target.value, category: categories.find((category) => category.id === e.target.value)?.name ?? '' })}
+                    className="input-field">
+                    <option value="">No category</option>
+                    {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="label-text">Price</label>
@@ -134,16 +164,18 @@ export default function AdminProducts() {
                   className="input-field resize-none" placeholder="Brief description" />
               </div>
               <div>
-                <label className="label-text">Image URL (optional)</label>
+                <label className="label-text">Product image (optional)</label>
+                <input type="file" accept="image/*" disabled={uploading} onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleImageUpload(file);
+                  e.target.value = '';
+                }} className="input-field file:mr-3 file:border-0 file:bg-ink-900 file:px-3 file:py-1.5 file:text-cream-50" />
+                {editing.image_url && <img src={editing.image_url} alt="Product preview" className="mt-3 h-24 w-24 object-cover border border-ink-100" />}
+                <label className="label-text mt-3">Or use an image URL</label>
                 <input type="text" value={editing.image_url} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
                   className="input-field" placeholder="https://..." />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label-text">Display Order</label>
-                  <input type="number" value={editing.display_order} onChange={(e) => setEditing({ ...editing, display_order: Number(e.target.value) })}
-                    className="input-field" />
-                </div>
+              <div>
                 <div className="flex items-end pb-2">
                   <label className="flex items-center gap-2 text-sm text-ink-700">
                     <input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} />

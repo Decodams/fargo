@@ -35,7 +35,7 @@ export default function Products() {
       .from('products')
       .select('*')
       .eq('is_active', true)
-      .order('display_order')
+      .order('name', { ascending: true })
       .then(({ data }) => {
         const rows = withFallback(data as Product[] | null, FALLBACK_PRODUCTS);
         setProducts(rows);

@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6 lg:space-y-8">
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <StatCard icon={<CalendarDays size={18} />} label="Today" value={stats?.todayCount.toString() ?? '0'} sub="appointments" />
         <StatCard icon={<Clock size={18} />} label="This Week" value={stats?.weekCount.toString() ?? '0'} sub="bookings" />
         <StatCard icon={<MessageSquare size={18} />} label="New Inquiries" value={stats?.pendingInquiries.toString() ?? '0'} sub="awaiting response" />
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
           ) : (
             <div className="space-y-2">
               {todayBookings.map((booking) => (
-                <div key={booking.id} className="bg-cream-50 border border-ink-100 p-3 lg:p-4 flex items-center justify-between gap-3 lg:gap-4">
+                <div key={booking.id} className="bg-cream-50 border border-ink-100 p-3 lg:p-4 flex items-center justify-between gap-3 lg:gap-4 min-w-0">
                   <div className="flex items-center gap-3 lg:gap-4 min-w-0 flex-1">
                     <div className="text-center shrink-0">
                       <p className="text-xs uppercase tracking-wider text-ink-400">{formatTime(booking.scheduled_at).split(' ')[0]}</p>
@@ -102,7 +102,7 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                   </div>
-                  <StatusBadge status={booking.status} />
+                  <div className="shrink-0"><StatusBadge status={booking.status} /></div>
                 </div>
               ))}
             </div>
@@ -125,9 +125,9 @@ export default function AdminDashboard() {
             <div className="space-y-2">
               {recentInquiries.map((inq) => (
                 <div key={inq.id} className="bg-cream-50 border border-ink-100 p-3 lg:p-4">
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between gap-2 mb-1 min-w-0">
                     <p className="text-sm font-medium text-ink-900 truncate">{inq.name}</p>
-                    <StatusBadge status={inq.status} variant="inquiry" />
+                    <div className="shrink-0"><StatusBadge status={inq.status} variant="inquiry" /></div>
                   </div>
                   <p className="text-xs text-ink-500 truncate">{inq.message}</p>
                   <p className="text-xs text-ink-400 mt-1">{formatRelative(inq.created_at)}</p>
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 pt-2 lg:pt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 pt-2 lg:pt-4 min-w-0">
         <QuickAction to="/admin/services" label="Manage Services" icon={<CalendarDays size={18} />} />
         <QuickAction to="/admin/settings" label="Business Settings" icon={<Users size={18} />} />
         <QuickAction to="/admin/customers" label="View Customers" icon={<Users size={18} />} />

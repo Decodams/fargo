@@ -45,7 +45,7 @@ export default function Contact() {
           .from('products')
           .select('*')
           .eq('is_active', true)
-          .order('display_order');
+          .order('name', { ascending: true });
         setProducts(data && data.length ? data : FALLBACK_PRODUCTS);
         const productSlug = searchParams.get('product');
         if (productSlug) setSelectedProduct(productSlug);

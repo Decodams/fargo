@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, Check, Clock, Home as HomeIcon, Store, Calendar, CreditCard, Loader2, Info } from 'lucide-react';
 import { supabase, isSupabaseConfigured, supabasePublicKey } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
-import { getSetting, formatPrice, formatPriceRange, formatDuration, DAY_NAMES, DAY_SHORT, MONTH_NAMES } from '@/lib/utils';
+import { getSetting, formatPrice, formatDuration, DAY_NAMES, DAY_SHORT, MONTH_NAMES } from '@/lib/utils';
 import type { Service, Staff, BusinessHour, Category, DistanceZone } from '@/types';
 import { FALLBACK_SERVICES, FALLBACK_STAFF, FALLBACK_BUSINESS_HOURS, FALLBACK_CATEGORIES, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
@@ -24,7 +24,7 @@ interface BookingState {
   homeAddress: string;
   notes: string;
   prepay: boolean;
-  partySize: number;
+  partySize: number | string;
   distanceZoneId: string | null;
 }
 
@@ -75,15 +75,16 @@ export default function Booking() {
 
   const currency = getSetting(settings, 'currency_symbol');
   const bufferMin = Number(getSetting(settings, 'buffer_time_minutes')) || 15;
+  const homeFee = Number(getSetting(settings, 'home_service_fee')) || 0;
 
   useEffect(() => {
     (async () => {
       const [{ data: svcs }, { data: stf }, { data: bh }, { data: cats }, { data: zones }] = await Promise.all([
-        supabase.from('services').select('*').eq('is_active', true).order('display_order'),
-        supabase.from('staff').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('services').select('*').eq('is_active', true).order('name', { ascending: true }),
+        supabase.from('staff').select('*').eq('is_active', true).order('name', { ascending: true }),
         supabase.from('business_hours').select('*').order('day_of_week'),
-        supabase.from('categories').select('*').order('display_order'),
-        supabase.from('distance_zones').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('categories').select('*').order('name', { ascending: true }),
+        supabase.from('distance_zones').select('*').eq('is_active', true).order('name', { ascending: true }),
       ]);
 
       // Fall back to curated offline data when the backend is empty / unconfigured
@@ -170,9 +171,9 @@ export default function Booking() {
 
   // Per-person: multiply price for services with per_person=true
   const serviceTotal = state.selectedServices.reduce((sum, s) => {
-    const unitPrice = s.price_max;
+    const unitPrice = s.price;
     if (perPersonEnabled && s.per_person) {
-      return sum + unitPrice * state.partySize;
+      return sum + unitPrice * (Number(state.partySize) || 1);
     }
     return sum + unitPrice;
   }, 0);
@@ -325,7 +326,7 @@ export default function Booking() {
         total_price: grandTotal,
         travel_fee: travelFee,
         discount_amount: discountAmount,
-        party_size: state.partySize,
+        party_size: Number(state.partySize) || 1,
         payment_status: state.prepay ? 'prepaid' : 'unpaid',
         confirmation_status: state.prepay ? 'pending' : 'confirmed',
         status: 'pending',
@@ -335,23 +336,18 @@ export default function Booking() {
       let reference: string;
 
       if (isSupabaseConfigured) {
-        const { data: booking, error: bookingError } = await supabase
-          .from('bookings')
-          .insert(bookingData)
-          .select()
-          .single();
+        const { data: createdReference, error: bookingError } = await supabase.rpc('create_public_booking', {
+          booking_data: bookingData,
+          booking_services: state.selectedServices.map((s) => ({
+            service_id: s.id,
+            service_name: s.name,
+            price: s.price,
+            quantity: (perPersonEnabled && s.per_person) ? Number(state.partySize) || 1 : 1,
+            duration_minutes: s.duration_minutes,
+          })),
+        });
         if (bookingError) throw bookingError;
-        reference = booking.reference;
-
-        const bsData = state.selectedServices.map((s) => ({
-          booking_id: booking.id,
-          service_id: s.id,
-          service_name: s.name,
-          price: s.price_max,
-          quantity: (perPersonEnabled && s.per_person) ? state.partySize : 1,
-          duration_minutes: s.duration_minutes,
-        }));
-        await supabase.from('booking_services').insert(bsData);
+        reference = typeof createdReference === 'string' ? createdReference : createdReference.reference;
 
 // Fire notification email (non-blocking — don't fail the booking if email fails)
         try {
@@ -405,7 +401,12 @@ export default function Booking() {
         },
       });
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Booking failed. Please try again.');
+      const message = err instanceof Error
+        ? err.message
+        : err && typeof err === 'object' && 'message' in err
+          ? String(err.message)
+          : 'Booking failed. Please try again.';
+      setSubmitError(message);
       setStep('payment');
     }
   };
@@ -544,7 +545,7 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
                           <h3 className="text-base font-display text-ink-900 truncate">{service.name}</h3>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-xs text-ink-500">
                             <span className="flex items-center gap-1"><Clock size={12} /> {formatDuration(service.duration_minutes)}</span>
-                            <span>{formatPriceRange(service.price_min, service.price_max, currency)}</span>
+                            <span>{formatPrice(service.price, currency)}</span>
                             {service.home_service_eligible && <span className="flex items-center gap-1 text-olive-600"><HomeIcon size={12} /> Home</span>}
                           </div>
                         </div>
@@ -730,7 +731,7 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
                   <div>
                     <label className="label-text" htmlFor="bk-party">Number of Persons</label>
                     <input id="bk-party" type="number" min={1} max={Number(getSetting(settings, 'per_person_max')) || 10} value={state.partySize}
-                      onChange={(e) => update({ partySize: Math.max(1, Number(e.target.value) || 1) })}
+                      onChange={(e) => update({ partySize: e.target.value })}
                       className="input-field" />
                     <p className="mt-1.5 text-xs text-ink-400">Some of your selected services are priced per person.</p>
                   </div>
@@ -796,14 +797,14 @@ function FilterChip({ active, onClick, children }: FilterChipProps) {
                     <div key={s.id} className="flex justify-between">
                       <span className="text-cream-100">
                         {s.name}
-                        {perPersonEnabled && s.per_person && state.partySize > 1 && (
-                          <span className="text-ink-400 text-xs ml-1">x{state.partySize}</span>
+                        {perPersonEnabled && s.per_person && (Number(state.partySize) || 1) > 1 && (
+                          <span className="text-ink-400 text-xs ml-1">x{Number(state.partySize) || 1}</span>
                         )}
                       </span>
                       <span className="text-ink-300">
                         {perPersonEnabled && s.per_person
-                          ? formatPrice(s.price_max * state.partySize, currency)
-                          : formatPriceRange(s.price_min, s.price_max, currency)}
+                          ? formatPrice(s.price * (Number(state.partySize) || 1), currency)
+                          : formatPrice(s.price, currency)}
                       </span>
                     </div>
                   ))}

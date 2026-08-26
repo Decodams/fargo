@@ -32,11 +32,6 @@ export default function BookingConfirmation() {
   const email = getSetting(settings, 'contact_email') || 'Fargounisexsalon@gmail.com';
   const address = getSetting(settings, 'address') || 'No 8 Dr Billy Okoye Boulevard By Revenue House/Immigration Awka Anambra State';
 
-  // If no state, redirect to home
-  if (!reference) {
-    return <Navigate to="/" replace />;
-  }
-
   // Noindex this transactional page
   useEffect(() => {
     const meta = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
@@ -48,20 +43,15 @@ export default function BookingConfirmation() {
   // Determine the effective confirmation status: live DB value > navigate state
   const effectiveStatus = liveStatus ?? navigateState.confirmation_status;
   const isPending = effectiveStatus === 'pending';
-  const isConfirmed = effectiveStatus === 'confirmed';
 
   // Poll the database every 10 seconds to check for confirmation
   useEffect(() => {
     if (!isSupabaseConfigured || !reference) return;
 
     const checkStatus = async () => {
-      const { data } = await supabase
-        .from('bookings')
-        .select('confirmation_status')
-        .eq('reference', reference)
-        .single();
-      if (data && data.confirmation_status !== liveStatus) {
-        setLiveStatus(data.confirmation_status);
+      const { data } = await supabase.rpc('get_public_booking_status', { booking_reference: reference });
+      if (data && data !== liveStatus) {
+        setLiveStatus(data);
       }
     };
 
@@ -76,16 +66,17 @@ export default function BookingConfirmation() {
     return () => clearInterval(interval);
   }, [reference, liveStatus]);
 
+  // If no state, redirect to home after all hooks have been declared.
+  if (!reference) {
+    return <Navigate to="/" replace />;
+  }
+
   const handleRefresh = async () => {
     if (!reference) return;
     setChecking(true);
-    const { data } = await supabase
-      .from('bookings')
-      .select('confirmation_status')
-      .eq('reference', reference)
-      .single();
+    const { data } = await supabase.rpc('get_public_booking_status', { booking_reference: reference });
     if (data) {
-      setLiveStatus(data.confirmation_status);
+      setLiveStatus(data);
     }
     setChecking(false);
   };

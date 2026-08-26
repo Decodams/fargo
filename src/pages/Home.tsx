@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, ArrowUpRight, Scissors, Home as HomeIcon, Clock, MapPin } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { IMAGES } from '@/lib/images';
-import { formatPriceRange, formatDuration, getSetting } from '@/lib/utils';
+import { formatPrice, formatDuration, getSetting } from '@/lib/utils';
 import { useSettings } from '@/lib/hooks';
 import { getHeroTitleLines, getPhilosophyParagraphs } from '@/lib/content';
 import type { Service, Category } from '@/types';
@@ -22,8 +22,8 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       const [{ data: cats }, { data: svcs }] = await Promise.all([
-        supabase.from('categories').select('*').order('display_order'),
-        supabase.from('services').select('*').eq('is_active', true).order('display_order'),
+        supabase.from('categories').select('*').order('name', { ascending: true }),
+        supabase.from('services').select('*').eq('is_active', true).order('name', { ascending: true }),
       ]);
       setCategories(withFallback(cats as Category[] | null, FALLBACK_CATEGORIES));
       setServices(withFallback(svcs as Service[] | null, FALLBACK_SERVICES));
@@ -181,7 +181,7 @@ export default function Home() {
                           <span className="flex items-center gap-1.5 shrink-0">
                             <Clock size={13} /> {formatDuration(service.duration_minutes)}
                           </span>
-                          <span className="text-cream-100 truncate">{formatPriceRange(service.price_min, service.price_max)}</span>
+                          <span className="text-cream-100 truncate">{formatPrice(service.price)}</span>
                         </div>
                       </Card>
                     </Link>
