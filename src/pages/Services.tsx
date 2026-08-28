@@ -92,31 +92,31 @@ export default function Services() {
                   <Reveal key={service.id} delay={i * 40}>
                     <Link
                       to={`/services/${service.slug}`}
-                      className="group grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 py-7 lg:py-8 items-center hover:bg-cream-100/60 -mx-4 px-4 transition-colors"
+                      className="group grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-6 py-6 lg:py-8 items-center hover:bg-cream-100/60 -mx-4 px-4 transition-colors border-l-2 border-transparent hover:border-rose-400"
                     >
                       <div className="md:col-span-2">
-                        <span className="text-xs uppercase tracking-wider-2 text-ink-400">
+                        <span className="text-xs uppercase tracking-wider-2 text-ink-500 font-semibold">
                           {category?.name}
                         </span>
                       </div>
                       <div className="md:col-span-5">
-                        <h3 className="text-xl lg:text-[1.7rem] font-display font-medium text-ink-900 group-hover:text-rose-500 transition-colors">
+                        <h3 className="text-2xl lg:text-[1.7rem] font-display font-semibold text-ink-900 group-hover:text-rose-500 transition-colors leading-snug">
                           {service.name}
                         </h3>
                         {service.description && (
-                          <p className="text-sm text-ink-500 mt-1.5 clamp-2">{service.description}</p>
+                          <p className="text-sm text-ink-600 mt-1.5 clamp-2">{service.description}</p>
                         )}
                       </div>
-                      <div className="md:col-span-2 flex items-center gap-2 text-sm text-ink-600">
+                      <div className="md:col-span-2 flex items-center gap-2 text-sm text-ink-700 font-medium">
                         <Clock size={15} className="text-ink-400" />
                         {formatDuration(service.duration_minutes)}
                       </div>
-                      <div className="md:col-span-1 text-sm font-medium text-ink-800">
+                      <div className="md:col-span-1 text-sm font-semibold text-ink-900">
                         {formatPrice(service.price)}
                       </div>
                       <div className="md:col-span-2 flex items-center justify-between md:justify-end gap-4">
                         {service.home_service_eligible && (
-                          <span className="flex items-center gap-1.5 text-xs text-olive-600">
+                          <span className="flex items-center gap-1.5 text-xs font-semibold text-olive-600">
                             <HomeIcon size={13} /> Home
                           </span>
                         )}

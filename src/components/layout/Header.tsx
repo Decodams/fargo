@@ -51,9 +51,8 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between h-20">
-          <Link to="/" className="flex flex-col items-start group" aria-label="Fargo home">
+          <Link to="/" className="flex items-center group" aria-label="Fargo home">
             <img src={logo} alt="Fargo Unisex Salon and Spa" className="h-12 w-auto object-contain" />
-            <span className="block w-10 h-px bg-gold-500 mt-1 transition-all duration-300 group-hover:w-full" />
           </Link>
 
           {/* Desktop nav */}
@@ -106,42 +105,40 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      <div
-        className={`lg:hidden fixed inset-x-0 top-20 bottom-0 bg-cream-50 z-40 overflow-y-auto transition-opacity duration-300 ease-out ${
-          menuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-      >
-        <nav className="flex flex-col px-5 py-6">
-          {NAV_LINKS.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                `flex items-center justify-between py-4 text-lg tracking-wide border-b border-ink-100 transition-colors ${
-                  isActive ? 'text-gold-600 font-medium' : 'text-ink-800 hover:text-rose-500'
-                }`
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-          <div className="mt-6">
-            <Link
-              to="/booking"
-              className="flex items-center justify-center w-full min-h-[52px] bg-ink-900 text-cream-50 text-sm tracking-wider-2 uppercase font-medium hover:bg-rose-500"
-            >
-              Book Now
-            </Link>
-            <Link
-              to="/products"
-              className="mt-3 flex items-center justify-center w-full min-h-[52px] border border-ink-200 text-ink-800 text-sm tracking-wider-2 uppercase font-medium hover:border-ink-900"
-            >
-              Shop Products
-            </Link>
-          </div>
-        </nav>
-      </div>
+      {/* Mobile menu — rendered only when open so it reliably shows */}
+      {menuOpen && (
+        <div className="lg:hidden fixed inset-0 top-20 bottom-0 bg-cream-50 z-50 overflow-y-auto animate-fade-in">
+          <nav className="flex flex-col px-5 py-6">
+            {NAV_LINKS.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `flex items-center justify-between py-4 text-lg font-semibold tracking-wide border-b border-ink-100 transition-colors ${
+                    isActive ? 'text-gold-600' : 'text-ink-900 hover:text-rose-500'
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+            <div className="mt-6">
+              <Link
+                to="/booking"
+                className="flex items-center justify-center w-full min-h-[52px] bg-ink-900 text-cream-50 text-sm tracking-wider-2 uppercase font-medium hover:bg-rose-500"
+              >
+                Book Now
+              </Link>
+              <Link
+                to="/products"
+                className="mt-3 flex items-center justify-center w-full min-h-[52px] border border-ink-200 text-ink-800 text-sm tracking-wider-2 uppercase font-medium hover:border-ink-900"
+              >
+                Shop Products
+              </Link>
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
