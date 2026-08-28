@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Minus, Plus, ShoppingBag, Trash2, Upload } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, supabasePublicKey } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
 import { getSetting, formatPrice } from '@/lib/utils';
 import type { Product } from '@/types';
@@ -104,6 +104,29 @@ export default function ProductCheckout() {
         });
         if (orderError) throw orderError;
         orderReference = typeof data === 'string' ? data : data.reference;
+
+        try {
+          const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
+          await fetch(fnUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${supabasePublicKey}` },
+            body: JSON.stringify({
+              type: 'product_order',
+              reference: orderReference,
+              customer_name: form.name.trim(),
+              customer_email: form.email.trim(),
+              customer_phone: form.phone.trim(),
+              home_address: form.deliveryMethod === 'delivery' ? form.address.trim() : null,
+              delivery_method: form.deliveryMethod,
+              delivery_fee: deliveryFee,
+              total_price: total,
+              items: cart.map((item) => ({ name: item.product.name, quantity: item.quantity, price: item.product.price })),
+              notes: form.notes.trim() || null,
+            }),
+          });
+        } catch {
+          // Email failure is non-critical — the order was already saved
+        }
       } else {
         orderReference = `FAR-P-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
       }

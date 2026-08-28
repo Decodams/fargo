@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface NotificationPayload {
-  type: 'booking' | 'inquiry' | 'booking_confirmed';
+  type: 'booking' | 'inquiry' | 'booking_confirmed' | 'product_order';
   reference?: string;
   customer_name: string;
   customer_email: string;
@@ -24,6 +24,9 @@ interface NotificationPayload {
   inquiry_type?: string;
   product_name?: string;
   confirmation_status?: 'pending' | 'confirmed';
+  delivery_method?: 'walk_in' | 'delivery';
+  delivery_fee?: number;
+  items?: { name: string; quantity: number; price: number }[];
 }
 
 Deno.serve(async (req: Request) => {
@@ -122,6 +125,33 @@ Deno.serve(async (req: Request) => {
           <p style="margin: 16px 0;"><a href="${siteUrl}/booking/confirmation" style="display: inline-block; padding: 12px 24px; background: #1a1612; color: #faf7f2; text-decoration: none; font-size: 14px; letter-spacing: 0.05em; text-transform: uppercase;">View Confirmation Ticket</a></p>
           <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
           <p style="color: #8a7766; font-size: 13px;">Questions? Contact us at <a href="mailto:${notifyEmail}" style="color: #b85a4e;">${notifyEmail}</a></p>
+        </div>
+      `;
+    } else if (payload.type === "product_order") {
+      // New product order → email the admin
+      subject = `New Product Order — ${payload.reference ?? "No ref"}`;
+      recipientEmail = notifyEmail;
+      const itemList = payload.items?.map((i) => `<li>${i.name} × ${i.quantity} — ₦${(i.price * i.quantity).toLocaleString()}</li>`).join("") ?? "";
+      const deliveryLabel = payload.delivery_method === "delivery" ? "Home Delivery" : "Salon Pickup";
+
+      htmlBody = `
+        <div style="font-family: Inter, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #faf7f2;">
+          <h2 style="color: #1a1612; font-family: Georgia, serif;">New Product Order</h2>
+          <p style="color: #6b5a4a;">Reference: <strong>${payload.reference ?? "N/A"}</strong></p>
+          <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Customer</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">${payload.customer_name}</td></tr>
+            <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Email</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">${payload.customer_email}</td></tr>
+            <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Phone</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">${payload.customer_phone ?? "N/A"}</td></tr>
+            <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Fulfilment</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">${deliveryLabel}</td></tr>
+            ${payload.home_address ? `<tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Address</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">${payload.home_address}</td></tr>` : ""}
+            ${payload.delivery_fee ? `<tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Delivery Fee</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">₦${payload.delivery_fee.toLocaleString()}</td></tr>` : ""}
+            <tr><td style="padding: 8px; color: #8a7766; border-bottom: 1px solid #ebe3d5;">Total</td><td style="padding: 8px; color: #1a1612; border-bottom: 1px solid #ebe3d5;">₦${(payload.total_price ?? 0).toLocaleString()}</td></tr>
+          </table>
+          <h3 style="color: #1a1612; font-family: Georgia, serif;">Items</h3>
+          <ul style="color: #3a3025;">${itemList}</ul>
+          ${payload.notes ? `<p style="color: #6b5a4a;"><strong>Notes:</strong> ${payload.notes}</p>` : ""}
+          <hr style="border: none; border-top: 1px solid #ebe3d5; margin: 24px 0;" />
+          <p style="color: #8a7766; font-size: 13px;">Manage this order in the <a href="${siteUrl}/admin/orders" style="color: #b85a4e;">admin dashboard</a>.</p>
         </div>
       `;
     } else {
