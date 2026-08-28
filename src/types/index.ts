@@ -114,6 +114,9 @@ export interface ProductOrder {
   status: 'pending' | 'confirmed' | 'fulfilled' | 'cancelled';
   payment_reference: string | null;
   notes: string | null;
+  delivery_method: 'walk_in' | 'delivery';
+  receipt_url: string | null;
+  delivery_fee: number;
   created_at: string;
   updated_at: string;
   product_order_items?: ProductOrderItem[];

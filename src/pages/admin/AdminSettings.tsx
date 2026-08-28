@@ -81,6 +81,7 @@ export default function AdminSettings() {
           <SettingField label="Bank Name" value={settings.bank_name ?? 'Moniepoint'} onChange={(v) => updateSetting('bank_name', v)} />
           <SettingField label="Account Number" value={settings.account_number ?? '5308789513'} onChange={(v) => updateSetting('account_number', v)} />
           <SettingField label="Account Name" value={settings.account_name ?? 'Fargo Unisex Salon and Spa'} onChange={(v) => updateSetting('account_name', v)} />
+          <SettingField label="Home Delivery Fee" value={settings.delivery_fee ?? ''} onChange={(v) => updateSetting('delivery_fee', v)} hint="Flat delivery charge for product home delivery (₦). Leave empty for no fee." />
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Minus, Plus, ShoppingBag, Trash2, Upload } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
 import { getSetting, formatPrice } from '@/lib/utils';
@@ -15,6 +15,7 @@ type CheckoutForm = {
   address: string;
   notes: string;
   paymentReference: string;
+  deliveryMethod: 'walk_in' | 'delivery';
 };
 
 function readCart(): CartItem[] {
@@ -28,7 +29,12 @@ function readCart(): CartItem[] {
 export default function ProductCheckout() {
   const { settings } = useSettings();
   const [cart, setCart] = useState<CartItem[]>(readCart);
-  const [form, setForm] = useState<CheckoutForm>({ name: '', email: '', phone: '', address: '', notes: '', paymentReference: '' });
+  const [form, setForm] = useState<CheckoutForm>({
+    name: '', email: '', phone: '', address: '', notes: '', paymentReference: '', deliveryMethod: 'walk_in',
+  });
+  const [receipt, setReceipt] = useState<File | null>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reference, setReference] = useState('');
   const [error, setError] = useState('');
@@ -37,7 +43,10 @@ export default function ProductCheckout() {
   const bankName = getSetting(settings, 'bank_name') || 'Moniepoint';
   const accountNumber = getSetting(settings, 'account_number') || '5308789513';
   const accountName = getSetting(settings, 'account_name') || 'Fargo Unisex Salon and Spa';
-  const total = cart.reduce((sum, item) => sum + (Number(item.product.price) || 0) * item.quantity, 0);
+  const deliveryFeeSetting = Number(getSetting(settings, 'delivery_fee') || 0);
+  const deliveryFee = form.deliveryMethod === 'delivery' ? deliveryFeeSetting : 0;
+  const subtotal = cart.reduce((sum, item) => sum + (Number(item.product.price) || 0) * item.quantity, 0);
+  const total = subtotal + deliveryFee;
 
   useEffect(() => {
     localStorage.setItem('fargo-cart', JSON.stringify(cart));
@@ -47,6 +56,25 @@ export default function ProductCheckout() {
     setCart((current) => current
       .map((item) => item.product.id === productId ? { ...item, quantity: item.quantity + change } : item)
       .filter((item) => item.quantity > 0));
+  };
+
+  const uploadReceipt = async (file: File) => {
+    if (!isSupabaseConfigured) return;
+    setUploading(true);
+    setError('');
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `orders/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('receipts').upload(path, file, { upsert: false });
+      if (uploadError) throw uploadError;
+      const { data: publicUrl } = supabase.storage.from('receipts').getPublicUrl(path);
+      setReceiptUrl(publicUrl.publicUrl);
+      setReceipt(file);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Receipt upload failed. Please try again or add the transfer reference instead.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -64,6 +92,9 @@ export default function ProductCheckout() {
         delivery_address: form.address.trim(),
         payment_reference: form.paymentReference.trim() || null,
         notes: form.notes.trim() || null,
+        delivery_method: form.deliveryMethod,
+        delivery_fee: deliveryFee,
+        receipt_url: receiptUrl,
       };
 
       if (isSupabaseConfigured) {
@@ -94,12 +125,16 @@ export default function ProductCheckout() {
           <CheckCircle size={48} className="mx-auto mb-5 text-olive-500" />
           <p className="text-xs uppercase tracking-wider-3 text-rose-500 mb-3">Order received</p>
           <h1 className="text-3xl lg:text-4xl font-display text-ink-900 mb-3">Your order is being confirmed</h1>
-          <p className="text-ink-600 leading-relaxed mb-6">Use the reference below when making or confirming your bank transfer.</p>
+          <p className="text-ink-600 leading-relaxed mb-6">
+            Keep this reference handy. {form.deliveryMethod === 'delivery'
+              ? 'Our team will arrange home delivery once your payment is confirmed.'
+              : 'You can pick your order up at the salon once your payment is confirmed.'}
+          </p>
           <p className="font-mono text-lg text-ink-900 mb-8">{reference}</p>
           <div className="bg-cream-100 border border-ink-100 p-6 text-left mb-8 text-sm text-ink-700 space-y-1">
             <p className="font-medium text-ink-900 mb-2">Transfer details</p>
             <p>Bank: {bankName}</p><p>Account name: {accountName}</p><p>Account number: <span className="font-mono text-ink-900">{accountNumber}</span></p>
-            <p className="pt-3 text-ink-500">Our team will verify your payment and contact you about pickup or delivery.</p>
+            <p className="pt-3 text-ink-500">Our team will verify your payment and contact you about {form.deliveryMethod === 'delivery' ? 'your delivery' : 'pickup'}.</p>
           </div>
           <Link to="/products" className="btn-primary">Continue shopping</Link>
         </div>
@@ -134,12 +169,59 @@ export default function ProductCheckout() {
               <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field" placeholder="Full name *" />
               <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-field" placeholder="Email *" />
               <input required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input-field" placeholder="Phone *" />
-              <textarea required rows={3} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="input-field resize-none" placeholder="Pickup or delivery address *" />
+
+              <div>
+                <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-2">Delivery method</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setForm({ ...form, deliveryMethod: 'walk_in' })} className={`border p-3 text-left text-sm transition-colors ${form.deliveryMethod === 'walk_in' ? 'border-ink-900 bg-cream-100' : 'border-ink-100 hover:border-ink-300'}`}>
+                    <p className="font-medium text-ink-900 mb-1">Pickup</p>
+                    <p className="text-xs text-ink-500">Collect from the salon</p>
+                  </button>
+                  <button type="button" onClick={() => setForm({ ...form, deliveryMethod: 'delivery' })} className={`border p-3 text-left text-sm transition-colors ${form.deliveryMethod === 'delivery' ? 'border-ink-900 bg-cream-100' : 'border-ink-100 hover:border-ink-300'}`}>
+                    <p className="font-medium text-ink-900 mb-1">Home delivery</p>
+                    <p className="text-xs text-ink-500">{deliveryFeeSetting > 0 ? `${formatPrice(deliveryFeeSetting, currency)} fee` : 'Delivery arranged'}</p>
+                  </button>
+                </div>
+              </div>
+
+              {form.deliveryMethod === 'delivery' && (
+                <textarea required rows={3} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="input-field resize-none" placeholder="Delivery address *" />
+              )}
+              {form.deliveryMethod === 'walk_in' && (
+                <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="input-field" placeholder="Pickup notes (optional)" />
+              )}
+
               <input value={form.paymentReference} onChange={(e) => setForm({ ...form, paymentReference: e.target.value })} className="input-field" placeholder="Transfer reference (optional)" />
               <textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="input-field resize-none" placeholder="Order notes (optional)" />
-              <div className="bg-cream-100 border border-ink-100 p-4 text-sm text-ink-600"><p className="font-medium text-ink-900 mb-2">Pay by bank transfer</p><p>{bankName} · {accountName}</p><p className="font-mono">{accountNumber}</p><p className="mt-2 text-xs text-ink-500">Your order is captured immediately and confirmed after payment verification.</p></div>
+
+              <div className="bg-cream-100 border border-ink-100 p-4 text-sm text-ink-600 space-y-3">
+                <div><p className="font-medium text-ink-900 mb-1">Pay by bank transfer</p><p>{bankName} · {accountName}</p><p className="font-mono">{accountNumber}</p></div>
+                <div className="border-t border-ink-100 pt-3">
+                  <label className="flex items-center gap-2 text-xs uppercase tracking-wider-2 text-ink-500 cursor-pointer">
+                    <Upload size={14} /> {receiptUrl ? 'Replace payment receipt' : 'Upload payment receipt (optional)'}
+                    <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadReceipt(f); }} />
+                  </label>
+                  {uploading && <p className="text-xs text-ink-500 mt-2">Uploading...</p>}
+                  {receiptUrl && <p className="text-xs text-olive-600 mt-2">Receipt uploaded: {receipt?.name}</p>}
+                  <p className="text-xs text-ink-400 mt-1">Prefer to upload later? Add the transfer reference above instead.</p>
+                </div>
+              </div>
+
               {error && <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 px-4 py-3">{error}</p>}
-              <div className="flex items-center justify-between border-t border-ink-100 pt-5"><span className="text-ink-600">Total</span><span className="text-xl font-display text-ink-900">{formatPrice(total, currency)}</span></div>
+              <div className="flex items-center justify-between border-t border-ink-100 pt-5">
+                <span className="text-ink-600">{deliveryFee > 0 ? <>Subtotal</> : <>Total</>}</span>
+                <span className="text-xl font-display text-ink-900">{formatPrice(subtotal, currency)}</span>
+              </div>
+              {deliveryFee > 0 && (
+                <div className="flex items-center justify-between text-sm text-ink-600">
+                  <span>Delivery</span><span>{formatPrice(deliveryFee, currency)}</span>
+                </div>
+              )}
+              {deliveryFee > 0 && (
+                <div className="flex items-center justify-between text-lg font-medium text-ink-900">
+                  <span>Total</span><span>{formatPrice(total, currency)}</span>
+                </div>
+              )}
               <button disabled={submitting || cart.length === 0} className="btn-primary w-full">{submitting ? 'Submitting...' : 'Place order'}</button>
             </form>
           </section>

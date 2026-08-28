@@ -278,7 +278,7 @@ function ZoneEditRow({
         </div>
         <div>
           <label className="label-text">Min km</label>
-              <input type="number" min={0} value={zone.min_km} onChange={(e) => onChange('min_km', e.target.value === '' ? null : Number(e.target.value))} className="input-field" />
+              <input type="number" min={0} value={zone.min_km ?? ''} onChange={(e) => onChange('min_km', e.target.value === '' ? null : Number(e.target.value))} className="input-field" />
         </div>
         <div>
           <label className="label-text">Max km</label>
@@ -286,7 +286,7 @@ function ZoneEditRow({
         </div>
         <div>
           <label className="label-text">Fee (₦)</label>
-              <input type="number" min={0} value={zone.fee} onChange={(e) => onChange('fee', e.target.value === '' ? null : Number(e.target.value))} className="input-field" />
+              <input type="number" min={0} value={zone.fee ?? ''} onChange={(e) => onChange('fee', e.target.value === '' ? null : Number(e.target.value))} className="input-field" />
         </div>
       </div>
       <div className="flex items-center gap-3">
