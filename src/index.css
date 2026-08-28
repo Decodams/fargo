@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&family=Inter+Tight:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,15 +9,18 @@
     scroll-behavior: smooth;
   }
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter Tight', system-ui, sans-serif;
     background-color: #faf7f2;
     color: #1a1612;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    letter-spacing: 0.01em;
+    line-height: 1.7;
   }
   h1, h2, h3, h4 {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 400;
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+    letter-spacing: -0.015em;
   }
   ::selection {
     background-color: #b85a4e;
@@ -27,16 +30,19 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center px-7 py-3.5 bg-ink-900 text-cream-50 text-sm tracking-wider-2 uppercase font-medium transition-all duration-300 hover:bg-rose-500 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-ink-900 text-cream-50 text-sm tracking-wider-2 uppercase font-medium transition-all duration-300 hover:bg-rose-500 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px];
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center px-7 py-3.5 border border-ink-900 text-ink-900 text-sm tracking-wider-2 uppercase font-medium transition-all duration-300 hover:bg-ink-900 hover:text-cream-50 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-ink-900 text-ink-900 text-sm tracking-wider-2 uppercase font-medium transition-all duration-300 hover:bg-ink-900 hover:text-cream-50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px];
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center px-5 py-2.5 text-sm tracking-wider-2 uppercase font-medium text-ink-700 transition-colors duration-300 hover:text-rose-500;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm tracking-wider-2 uppercase font-medium text-ink-700 transition-colors duration-300 hover:text-rose-500;
+  }
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-gold-500 text-ink-900 text-sm tracking-wider-2 uppercase font-semibold transition-all duration-300 hover:bg-gold-400 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px];
   }
   .input-field {
-    @apply w-full px-4 py-3 bg-transparent border border-ink-200 text-ink-900 placeholder-ink-400 focus:border-ink-900 focus:outline-none transition-colors duration-200 text-sm;
+    @apply w-full px-4 py-3 bg-transparent border border-ink-200 text-ink-900 placeholder-ink-400 focus:border-ink-900 focus:outline-none transition-colors duration-200 text-sm min-h-[48px];
   }
   .label-text {
     @apply block text-xs uppercase tracking-wider-2 text-ink-600 mb-2 font-medium;
@@ -134,3 +140,84 @@
 .hero-enter-delay-1 { animation-delay: 0.15s; }
 .hero-enter-delay-2 { animation-delay: 0.3s; }
 .hero-enter-delay-3 { animation-delay: 0.45s; }
+
+/* Staggered hero headline lines */
+.hero-line {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: heroLine 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes heroLine {
+  0% { opacity: 0; transform: translateY(22px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.hero-line-delay-0 { animation-delay: 0.1s; }
+.hero-line-delay-1 { animation-delay: 0.25s; }
+.hero-line-delay-2 { animation-delay: 0.4s; }
+
+/* ---- Premium card interactions ---- */
+.card-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease-out, border-color 0.3s ease;
+}
+.card-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px -18px rgba(26, 22, 18, 0.35);
+}
+
+/* ---- Image treatment: soft vignette + subtle grain ---- */
+.img-frame {
+  position: relative;
+  overflow: hidden;
+}
+.img-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 120% at 50% 40%, transparent 55%, rgba(26, 22, 18, 0.28) 100%),
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+
+/* ---- Section entrance: gentle fade + upward drift ---- */
+.section-enter {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.section-enter.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- Hero background slow zoom ---- */
+@keyframes heroZoom {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+.hero-zoom {
+  animation: heroZoom 24s ease-out forwards;
+  will-change: transform;
+}
+
+/* ---- Gold divider accent ---- */
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c9a35e, transparent);
+  border: none;
+}
+
+/* ---- Accessibility: respect reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hero-zoom {
+    animation: none;
+  }
+}

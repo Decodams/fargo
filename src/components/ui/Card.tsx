@@ -34,8 +34,8 @@ export default function Card({
 }: CardProps) {
   const hoverClass =
     variant === 'dark'
-      ? 'transition-colors duration-300 hover:bg-ink-700'
-      : 'transition-colors duration-300 hover:border-ink-300';
+      ? 'card-lift transition-colors duration-300 hover:bg-ink-700'
+      : 'card-lift transition-colors duration-300 hover:border-ink-300';
 
   return (
     <Tag

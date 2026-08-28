@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Cormorant Garamond"', 'serif'],
-        sans: ['"Inter"', 'system-ui', 'sans-serif'],
+        display: ['"Playfair Display"', 'serif'],
+        sans: ['"Inter Tight"', 'system-ui', 'sans-serif'],
       },
       colors: {
         ink: {
@@ -28,6 +28,12 @@ export default {
           400: '#c97064',
           500: '#b85a4e',
           600: '#a04a40',
+        },
+        gold: {
+          300: '#d9b882',
+          400: '#c9a35e',
+          500: '#b8913f',
+          600: '#a17c2f',
         },
         olive: {
           500: '#6b7b52',

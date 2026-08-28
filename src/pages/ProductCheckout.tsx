@@ -176,11 +176,22 @@ export default function ProductCheckout() {
               <div className="border border-ink-100 bg-cream-100 p-10 text-center"><p className="text-ink-500 mb-5">Your bag is empty.</p><Link to="/products" className="btn-outline">Browse products</Link></div>
             ) : (
               <div className="divide-y divide-ink-100 border-y border-ink-100">
-                {cart.map((item) => <div key={item.product.id} className="py-5 flex gap-4 items-center">
-                  <img src={item.product.image_url || ''} alt="" className="w-16 h-16 object-cover bg-cream-100" />
-                  <div className="flex-1 min-w-0"><p className="font-display text-lg text-ink-900 truncate">{item.product.name}</p><p className="text-sm text-ink-500">{formatPrice(Number(item.product.price) || 0, currency)}</p></div>
-                  <div className="flex items-center border border-ink-200"><button type="button" onClick={() => updateQuantity(item.product.id, -1)} className="p-2 text-ink-500 hover:text-ink-900"><Minus size={14} /></button><span className="w-8 text-center text-sm">{item.quantity}</span><button type="button" onClick={() => updateQuantity(item.product.id, 1)} className="p-2 text-ink-500 hover:text-ink-900"><Plus size={14} /></button></div>
-                  <button type="button" onClick={() => updateQuantity(item.product.id, -item.quantity)} aria-label={`Remove ${item.product.name}`} className="p-2 text-ink-400 hover:text-rose-500"><Trash2 size={16} /></button>
+                {cart.map((item) => <div key={item.product.id} className="py-5 flex items-start gap-4">
+                  <img src={item.product.image_url || ''} alt="" className="w-16 h-16 shrink-0 object-cover bg-cream-100" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-display text-lg text-ink-900 leading-snug">{item.product.name}</p>
+                        <p className="text-sm text-ink-500 mt-0.5">{formatPrice(Number(item.product.price) || 0, currency)}</p>
+                      </div>
+                      <button type="button" onClick={() => updateQuantity(item.product.id, -item.quantity)} aria-label={`Remove ${item.product.name}`} className="p-1.5 text-ink-400 hover:text-rose-500 shrink-0"><Trash2 size={16} /></button>
+                    </div>
+                    <div className="mt-3 inline-flex items-center border border-ink-200">
+                      <button type="button" onClick={() => updateQuantity(item.product.id, -1)} aria-label="Decrease quantity" className="w-10 h-10 flex items-center justify-center text-ink-500 hover:text-ink-900 active:bg-ink-100"><Minus size={14} /></button>
+                      <span className="w-10 text-center text-sm">{item.quantity}</span>
+                      <button type="button" onClick={() => updateQuantity(item.product.id, 1)} aria-label="Increase quantity" className="w-10 h-10 flex items-center justify-center text-ink-500 hover:text-ink-900 active:bg-ink-100"><Plus size={14} /></button>
+                    </div>
+                  </div>
                 </div>)}
               </div>
             )}

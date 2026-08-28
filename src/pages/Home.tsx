@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ArrowRight, ArrowUpRight, Scissors, Home as HomeIcon, Clock, MapPin } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { IMAGES } from '@/lib/images';
@@ -53,29 +53,31 @@ export default function Home() {
 
       <section className="relative min-h-screen flex items-end bg-ink-900 overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src={heroImage}
-            alt="Fargo salon interior"
-            className="w-full h-full object-cover opacity-60"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/60 to-ink-900/30" />
+          <div className="w-full h-full overflow-hidden">
+            <img
+              src={heroImage}
+              alt="Fargo salon interior"
+              className="w-full h-full object-cover opacity-60 hero-zoom"
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-ink-900 via-ink-900/55 to-ink-900/25" />
         </div>
 
         <div className="relative w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pb-16 lg:pb-24 pt-32">
           <div className="grid lg:grid-cols-12 gap-8 items-end">
             <div className="lg:col-span-7 min-w-0">
-              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-display text-cream-50 leading-[1.05] text-balance hero-enter">
+              <p className="hero-enter text-xs uppercase tracking-wider-3 text-gold-400 mb-6">Unisex Salon · Spa · Awka</p>
+              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-display text-cream-50 leading-[1.04] text-balance">
                 {titleLines.map((line, i) => (
-                  <span key={i}>
+                  <span key={i} className={`block hero-line hero-line-delay-${i}`}>
                     {line}
-                    {i < titleLines.length - 1 && <br />}
                   </span>
                 ))}
               </h1>
-              <p className="mt-8 text-lg text-cream-100/80 max-w-md leading-relaxed hero-enter hero-enter-delay-1">
+              <p className="mt-8 text-lg text-cream-100/85 max-w-md leading-relaxed hero-enter hero-enter-delay-2">
                 {getSetting(settings, 'hero_subtitle')}
               </p>
-              <div className="mt-10 flex flex-wrap gap-4 hero-enter hero-enter-delay-2">
+              <div className="mt-10 flex flex-wrap gap-4 hero-enter hero-enter-delay-3">
                 <Link
                   to="/booking"
                   className="inline-flex items-center gap-2 px-7 py-3.5 bg-cream-50 text-ink-900 text-sm tracking-wider-2 uppercase font-medium hover:bg-rose-500 hover:text-cream-50 transition-all duration-300"
@@ -239,19 +241,19 @@ export default function Home() {
           </Reveal>
           <div className="mt-14 grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
             <Reveal className="col-span-2 lg:col-span-2 lg:row-span-2">
-              <img src={IMAGES.salonInterior} alt="Salon interior" loading="lazy" className="w-full h-full object-cover min-h-[300px] lg:min-h-[500px]" />
+              <div className="img-frame h-full"><img src={IMAGES.salonInterior} alt="Salon interior" loading="lazy" className="w-full h-full object-cover min-h-[300px] lg:min-h-[500px]" /></div>
             </Reveal>
             <Reveal delay={100}>
-              <img src={IMAGES.salonChair} alt="Salon chair and mirror" loading="lazy" className="w-full h-48 lg:h-64 object-cover" />
+              <div className="img-frame"><img src={IMAGES.salonChair} alt="Salon chair and mirror" loading="lazy" className="w-full h-48 lg:h-64 object-cover" /></div>
             </Reveal>
             <Reveal delay={150}>
-              <img src={IMAGES.spaRoom} alt="Spa treatment room" loading="lazy" className="w-full h-48 lg:h-64 object-cover" />
+              <div className="img-frame"><img src={IMAGES.spaRoom} alt="Spa treatment room" loading="lazy" className="w-full h-48 lg:h-64 object-cover" /></div>
             </Reveal>
             <Reveal delay={200}>
-              <img src={IMAGES.manicure2} alt="Manicure session" loading="lazy" className="w-full h-48 lg:h-64 object-cover" />
+              <div className="img-frame"><img src={IMAGES.manicure2} alt="Manicure session" loading="lazy" className="w-full h-48 lg:h-64 object-cover" /></div>
             </Reveal>
             <Reveal delay={250}>
-              <img src={IMAGES.facialMask} alt="Facial treatment" loading="lazy" className="w-full h-48 lg:h-64 object-cover" />
+              <div className="img-frame"><img src={IMAGES.facialMask} alt="Facial treatment" loading="lazy" className="w-full h-48 lg:h-64 object-cover" /></div>
             </Reveal>
           </div>
           <Reveal delay={150}>
@@ -296,11 +298,51 @@ export default function Home() {
 }
 
 function Stat({ number, label, sub }: { number: string; label: string; sub?: string }) {
+  const animated = useCountUp(number);
   return (
     <div className="text-center lg:text-left min-w-0">
-      <p className="text-3xl lg:text-4xl font-display text-cream-50 truncate">{number}</p>
+      <p className="text-3xl lg:text-4xl font-display text-cream-50 truncate">{animated}</p>
       <p className="text-xs uppercase tracking-wider-2 text-cream-100/60 mt-1 truncate">{label}</p>
       {sub && <p className="text-[10px] text-cream-100/40 mt-0.5 truncate">{sub}</p>}
     </div>
   );
+}
+
+/** Counts up a numeric stat when it scrolls into view (very subtle, no suffix parsing). */
+function useCountUp(target: string) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [value, setValue] = useState(target);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const numeric = target.replace(/[^0-9.]/g, '');
+    const prefix = target.replace(/[0-9.]/g, '').split(/[+-]?$/)[0];
+    const suffix = target.replace(numeric, '').replace(prefix, '');
+    const num = parseFloat(numeric);
+    if (!Number.isFinite(num)) {
+      setValue(target);
+      return;
+    }
+    const decimals = numeric.includes('.') ? (numeric.split('.')[1].length || 0) : 0;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.unobserve(entry.target);
+        const duration = 1400;
+        const start = performance.now();
+        const tick = (now: number) => {
+          const p = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          const current = num * eased;
+          setValue(prefix + current.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix);
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [target]);
+  return value;
 }
