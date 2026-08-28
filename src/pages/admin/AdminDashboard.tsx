@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarDays, MessageSquare, Users, TrendingUp, ArrowRight, Clock } from 'lucide-react';
+import { CalendarDays, MessageSquare, Users, TrendingUp, ArrowRight, Clock, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrice, formatTime, formatRelative } from '@/lib/utils';
 import type { Booking, Inquiry, SettingsMap } from '@/types';
@@ -12,11 +12,13 @@ interface Stats {
   pendingInquiries: number;
   totalCustomers: number;
   revenue: number;
+  pendingOrders: number;
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [todayBookings, setTodayBookings] = useState<Booking[]>([]);
+  const [recentOrders, setRecentOrders] = useState<Array<{ id: string; reference: string; customer_name: string; total_price: number; status: string }>>([]);
   const [recentInquiries, setRecentInquiries] = useState<Inquiry[]>([]);
   const [settings, setSettings] = useState<SettingsMap>({});
   const [loading, setLoading] = useState(true);
@@ -30,16 +32,18 @@ export default function AdminDashboard() {
       const weekEnd = new Date(today);
       weekEnd.setDate(weekEnd.getDate() + 7);
 
-      const [todayBk, weekBk, inq, cust, paidBk, settingsData] = await Promise.all([
+      const [todayBk, weekBk, inq, cust, paidBk, productOrders, settingsData] = await Promise.all([
         supabase.from('bookings').select('*').gte('scheduled_at', today.toISOString()).lt('scheduled_at', tomorrow.toISOString()).order('scheduled_at'),
         supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('scheduled_at', today.toISOString()).lt('scheduled_at', weekEnd.toISOString()),
         supabase.from('inquiries').select('*').eq('status', 'new').order('created_at', { ascending: false }).limit(5),
         supabase.from('customers').select('*', { count: 'exact', head: true }),
         supabase.from('bookings').select('total_price').eq('payment_status', 'paid'),
+        supabase.from('product_orders').select('*').order('created_at', { ascending: false }).limit(5),
         supabase.from('settings').select('key, value'),
       ]);
 
       setTodayBookings((todayBk.data ?? []) as Booking[]);
+      setRecentOrders((productOrders.data ?? []) as Array<{ id: string; reference: string; customer_name: string; total_price: number; status: string }>);
       setRecentInquiries((inq.data ?? []) as Inquiry[]);
       const revenue = (paidBk.data ?? []).reduce((sum, b) => sum + Number(b.total_price), 0);
       const sMap: SettingsMap = {};
@@ -52,6 +56,7 @@ export default function AdminDashboard() {
         pendingInquiries: inq.count ?? 0,
         totalCustomers: cust.count ?? 0,
         revenue,
+        pendingOrders: (productOrders.data ?? []).filter((order) => order.status === 'pending').length,
       });
       setLoading(false);
     })();
@@ -66,11 +71,20 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6 lg:space-y-8">
       {/* Stat cards */}
-        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
         <StatCard icon={<CalendarDays size={18} />} label="Today" value={stats?.todayCount.toString() ?? '0'} sub="appointments" />
         <StatCard icon={<Clock size={18} />} label="This Week" value={stats?.weekCount.toString() ?? '0'} sub="bookings" />
         <StatCard icon={<MessageSquare size={18} />} label="New Inquiries" value={stats?.pendingInquiries.toString() ?? '0'} sub="awaiting response" />
         <StatCard icon={<TrendingUp size={18} />} label="Revenue" value={formatPrice(stats?.revenue ?? 0, currency)} sub="pre-paid total" />
+        <StatCard icon={<ShoppingBag size={18} />} label="Product Orders" value={stats?.pendingOrders.toString() ?? '0'} sub="awaiting action" />
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-3 lg:mb-4">
+          <h2 className="text-base lg:text-lg font-display text-ink-900">Recent product orders</h2>
+          <Link to="/admin/orders" className="text-xs uppercase tracking-wider-2 text-ink-500 hover:text-ink-900 transition-colors flex items-center gap-1">View all <ArrowRight size={13} /></Link>
+        </div>
+        {recentOrders.length === 0 ? <div className="bg-cream-100 border border-ink-100 p-6 text-center text-ink-400 text-sm">No product orders yet.</div> : <div className="space-y-2">{recentOrders.map((order) => <Link key={order.id} to="/admin/orders" className="flex items-center justify-between gap-4 bg-cream-50 border border-ink-100 p-3 lg:p-4 hover:border-ink-300"><div className="min-w-0"><p className="text-sm font-medium text-ink-900 truncate">{order.customer_name}</p><p className="text-xs text-ink-500">{order.reference}</p></div><div className="text-right shrink-0"><p className="text-sm text-ink-900">{formatPrice(order.total_price, currency)}</p><StatusBadge status={order.status} /></div></Link>)}</div>}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4 lg:gap-6">

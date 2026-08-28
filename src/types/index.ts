@@ -102,6 +102,32 @@ export interface Product {
   display_order: number;
 }
 
+export interface ProductOrder {
+  id: string;
+  reference: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  delivery_address: string;
+  total_price: number;
+  payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
+  status: 'pending' | 'confirmed' | 'fulfilled' | 'cancelled';
+  payment_reference: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  product_order_items?: ProductOrderItem[];
+}
+
+export interface ProductOrderItem {
+  id: string;
+  order_id: string;
+  product_id: string | null;
+  product_name: string;
+  price: number;
+  quantity: number;
+}
+
 export interface Inquiry {
   id: string;
   type: 'general' | 'product' | 'service';

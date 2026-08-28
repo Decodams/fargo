@@ -11,6 +11,7 @@ const ServiceDetail = lazy(() => import('@/pages/ServiceDetail'));
 const HomeServices = lazy(() => import('@/pages/HomeServices'));
 const Gallery = lazy(() => import('@/pages/Gallery'));
 const Products = lazy(() => import('@/pages/Products'));
+const ProductCheckout = lazy(() => import('@/pages/ProductCheckout'));
 const About = lazy(() => import('@/pages/About'));
 const Contact = lazy(() => import('@/pages/Contact'));
 const FAQ = lazy(() => import('@/pages/FAQ'));
@@ -19,6 +20,7 @@ const BookingConfirmation = lazy(() => import('@/pages/BookingConfirmation'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminBookings = lazy(() => import('@/pages/admin/AdminBookings'));
+const AdminOrders = lazy(() => import('@/pages/admin/AdminOrders'));
 const AdminInquiries = lazy(() => import('@/pages/admin/AdminInquiries'));
 const AdminServices = lazy(() => import('@/pages/admin/AdminServices'));
 const AdminProducts = lazy(() => import('@/pages/admin/AdminProducts'));
@@ -52,6 +54,7 @@ export default function App() {
             <Route path="/home-services" element={<HomeServices />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/products/checkout" element={<ProductCheckout />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
@@ -72,6 +75,7 @@ export default function App() {
           >
             <Route index element={<AdminDashboard />} />
             <Route path="bookings" element={<AdminBookings />} />
+            <Route path="orders" element={<AdminOrders />} />
             <Route path="inquiries" element={<AdminInquiries />} />
             <Route path="services" element={<AdminServices />} />
             <Route path="products" element={<AdminProducts />} />

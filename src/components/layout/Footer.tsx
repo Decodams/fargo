@@ -140,9 +140,6 @@ export default function Footer() {
             <Link to="/faq" className="text-xs text-ink-500 hover:text-ink-300 transition-colors">
               Policies
             </Link>
-            <Link to="/admin/login" className="text-xs text-ink-500 hover:text-ink-300 transition-colors">
-              Staff Login
-            </Link>
           </div>
         </div>
       </div>

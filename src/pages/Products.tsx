@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Search } from 'lucide-react';
+import { ArrowRight, Search, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/types';
@@ -29,6 +29,23 @@ export default function Products() {
   const [activeCat, setActiveCat] = useState('All');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [cartCount, setCartCount] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('fargo-cart') || '[]') as { quantity: number }[];
+      return stored.reduce((sum, item) => sum + item.quantity, 0);
+    } catch {
+      return 0;
+    }
+  });
+
+  const addToCart = (product: Product) => {
+    const stored = JSON.parse(localStorage.getItem('fargo-cart') || '[]') as { product: Product; quantity: number }[];
+    const existing = stored.find((item) => item.product.id === product.id);
+    if (existing) existing.quantity += 1;
+    else stored.push({ product, quantity: 1 });
+    localStorage.setItem('fargo-cart', JSON.stringify(stored));
+    setCartCount(stored.reduce((sum, item) => sum + item.quantity, 0));
+  };
 
   useEffect(() => {
     supabase
@@ -55,7 +72,7 @@ export default function Products() {
 
   return (
     <>
-      <PageMeta title="Products" description="Hair, skin, and styling products we trust at Fargo Unisex Salon & Spa. Inquire about availability." path="/products" />
+      <PageMeta title="Products" description="Hair, skin, and styling products we trust at Fargo Unisex Salon & Spa. Shop online." path="/products" />
 
       {/* Header */}
       <section className="pt-32 pb-12 lg:pt-40 lg:pb-16 bg-cream-100 border-b border-ink-100">
@@ -70,7 +87,7 @@ export default function Products() {
             <div className="lg:col-span-5 flex items-end">
               <p className="text-ink-600 leading-relaxed">
                 We use these products in our salon every day. If you'd like to take one home,
-                send us an inquiry and we'll confirm availability and arrange pickup or delivery.
+                Add what you need to your bag and check out for pickup or delivery.
               </p>
             </div>
           </div>
@@ -117,6 +134,11 @@ export default function Products() {
       {/* Product grid */}
       <section className="py-12 lg:py-16 bg-cream-50">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+          <div className="flex justify-end mb-6">
+            <Link to="/products/checkout" className="btn-outline gap-2">
+              <ShoppingBag size={16} /> Bag{cartCount > 0 ? ` (${cartCount})` : ''}
+            </Link>
+          </div>
           {loading ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
@@ -129,10 +151,7 @@ export default function Products() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               {filtered.map((product, i) => (
                 <Reveal key={product.id} delay={(i % 4) * 60}>
-                  <Link
-                    to={`/contact?product=${product.slug}`}
-                    className="group block"
-                  >
+                  <div className="group block">
                     <div className="aspect-square bg-cream-100 overflow-hidden mb-4">
                       <img
                         src={PRODUCT_IMAGES[product.slug] ?? product.image_url ?? IMAGES_PLACEHOLDER}
@@ -148,10 +167,10 @@ export default function Products() {
                     {product.price && (
                       <p className="text-sm text-ink-700 mt-2">{formatPrice(product.price)}</p>
                     )}
-                    <span className="inline-flex items-center gap-1.5 mt-3 text-xs uppercase tracking-wider-2 text-ink-500 group-hover:text-rose-500 transition-colors">
-                      Inquire <ArrowRight size={13} />
-                    </span>
-                  </Link>
+                    <button type="button" onClick={() => addToCart(product)} className="inline-flex items-center gap-1.5 mt-3 text-xs uppercase tracking-wider-2 text-ink-500 hover:text-rose-500 transition-colors">
+                      Add to bag <ArrowRight size={13} />
+                    </button>
+                  </div>
                 </Reveal>
               ))}
             </div>

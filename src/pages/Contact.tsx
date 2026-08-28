@@ -117,14 +117,14 @@ export default function Contact() {
 
   return (
     <>
-      <PageMeta title="Contact" description="Get in touch with Fargo Unisex Salon & Spa. Questions, product inquiries, or just saying hello." path="/contact" />
+      <PageMeta title="Contact" description="Get in touch with Fargo Unisex Salon & Spa. Questions, product enquiries, or just saying hello." path="/contact" />
 
       {/* Header */}
       <section className="pt-32 pb-12 lg:pt-40 lg:pb-16 bg-cream-100 border-b border-ink-100">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
           <p className="text-xs uppercase tracking-wider-3 text-rose-500 mb-5">Contact</p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display text-ink-900 leading-[1.05] text-balance max-w-3xl">
-            Questions, product inquiries, or just saying hello.
+            Questions, product enquiries, or just saying hello.
           </h1>
         </div>
       </section>
@@ -215,7 +215,7 @@ export default function Contact() {
                   <form onSubmit={handleSubmit} className="bg-cream-100 border border-ink-100 p-6 lg:p-10">
                     {selectedProductObj && (
                       <div className="mb-6 p-4 bg-rose-50 border border-rose-200">
-                        <p className="text-xs uppercase tracking-wider-2 text-rose-500 mb-1">Product Inquiry</p>
+                        <p className="text-xs uppercase tracking-wider-2 text-rose-500 mb-1">Product Enquiry</p>
                         <p className="text-ink-900 font-display text-lg">{selectedProductObj.name}</p>
                       </div>
                     )}

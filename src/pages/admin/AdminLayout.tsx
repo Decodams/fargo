@@ -8,6 +8,7 @@ import logo from '@/image/Logo 2.png';
 const NAV = [
   { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
   { to: '/admin/bookings', label: 'Bookings', icon: CalendarDays, end: false },
+  { to: '/admin/orders', label: 'Product Orders', icon: Package, end: false },
   { to: '/admin/inquiries', label: 'Inquiries', icon: MessageSquare, end: false },
   { to: '/admin/services', label: 'Services', icon: Scissors, end: false },
   { to: '/admin/products', label: 'Products', icon: Package, end: false },
