@@ -7,6 +7,12 @@ interface PageMetaProps {
   description?: string;
   path?: string;
   noSuffix?: boolean;
+  noindex?: boolean;
+}
+
+function removeMeta(name: string) {
+  const el = document.querySelector(`meta[name="${name}"]`);
+  if (el) el.remove();
 }
 
 function setMeta(name: string, content: string, property = false) {
@@ -20,10 +26,11 @@ function setMeta(name: string, content: string, property = false) {
   el.content = content;
 }
 
-export default function PageMeta({ title, description, path = '', noSuffix = false }: PageMetaProps) {
+export default function PageMeta({ title, description, path = '', noSuffix = false, noindex = false }: PageMetaProps) {
   const { settings } = useSettings();
-  const siteName = getSetting(settings, 'business_name');
-  const baseUrl = getSetting(settings, 'site_url').replace(/\/$/, '');
+  const siteName = getSetting(settings, 'business_name') || 'Fargo Unisex Salon & Spa';
+  const settingsSiteUrl = getSetting(settings, 'site_url').trim().replace(/\/+$/, '');
+  const baseUrl = settingsSiteUrl || (typeof window !== 'undefined' ? window.location.origin : '');
   const defaultDesc = getSetting(settings, 'seo_description');
   const ogImage = getSetting(settings, 'seo_og_image');
 
@@ -39,6 +46,11 @@ export default function PageMeta({ title, description, path = '', noSuffix = fal
     setMeta('og:url', url, true);
     setMeta('twitter:title', fullTitle);
     setMeta('twitter:description', desc);
+    if (noindex) {
+      setMeta('robots', 'noindex, nofollow');
+    } else {
+      removeMeta('robots');
+    }
     if (ogImage) {
       setMeta('og:image', ogImage, true);
       setMeta('twitter:image', ogImage);
@@ -51,7 +63,7 @@ export default function PageMeta({ title, description, path = '', noSuffix = fal
       document.head.appendChild(canonical);
     }
     canonical.href = url;
-  }, [fullTitle, desc, url, ogImage]);
+  }, [fullTitle, desc, url, ogImage, noindex]);
 
   return null;
 }

@@ -5,6 +5,7 @@ import { useBookingTicket } from '@/components/ui/BookingTicketPDF';
 import { useSettings } from '@/lib/hooks';
 import { getSetting } from '@/lib/utils';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import PageMeta from '@/components/ui/PageMeta';
 
 export default function BookingConfirmation() {
   const { state } = useLocation();
@@ -33,14 +34,6 @@ export default function BookingConfirmation() {
   const phone = getSetting(settings, 'contact_phone') || '09012101020';
   const email = getSetting(settings, 'contact_email') || 'Fargounisexsalon@gmail.com';
   const address = getSetting(settings, 'address') || 'No 8 Dr Billy Okoye Boulevard By Revenue House/Immigration Awka Anambra State';
-
-  // Noindex this transactional page
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
-    if (meta) { meta.content = 'noindex'; } else {
-      const el = document.createElement('meta'); el.name = 'robots'; el.content = 'noindex'; document.head.appendChild(el);
-    }
-  }, []);
 
   // Determine the effective confirmation status: live DB value > navigate state
   const effectiveStatus = liveStatus ?? navigateState.confirmation_status;
@@ -93,7 +86,9 @@ export default function BookingConfirmation() {
     : 'N/A';
 
   return (
-    <div className="min-h-screen bg-cream-50 flex items-center justify-center px-5 py-20">
+    <>
+      <PageMeta title="Booking Confirmation" path={`/booking/confirmation/${reference}`} noindex />
+      <div className="min-h-screen bg-cream-50 flex items-center justify-center px-5 py-20">
       <div className="w-full max-w-xl">
         {isPending ? (
           <div className="text-center">
@@ -275,5 +270,6 @@ export default function BookingConfirmation() {
         )}
       </div>
     </div>
+    </>
   );
 }

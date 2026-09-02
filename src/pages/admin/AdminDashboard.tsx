@@ -32,10 +32,11 @@ export default function AdminDashboard() {
       const weekEnd = new Date(today);
       weekEnd.setDate(weekEnd.getDate() + 7);
 
-      const [todayBk, weekBk, inq, cust, paidBk, productOrders, settingsData] = await Promise.all([
+      const [todayBk, weekBk, inq, inqCount, cust, paidBk, productOrders, settingsData] = await Promise.all([
         supabase.from('bookings').select('*').gte('scheduled_at', today.toISOString()).lt('scheduled_at', tomorrow.toISOString()).order('scheduled_at'),
         supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('scheduled_at', today.toISOString()).lt('scheduled_at', weekEnd.toISOString()),
         supabase.from('inquiries').select('*').eq('status', 'new').order('created_at', { ascending: false }).limit(5),
+        supabase.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', 'new'),
         supabase.from('customers').select('*', { count: 'exact', head: true }),
         supabase.from('bookings').select('total_price').eq('payment_status', 'paid'),
         supabase.from('product_orders').select('*').order('created_at', { ascending: false }).limit(5),
@@ -53,7 +54,7 @@ export default function AdminDashboard() {
       setStats({
         todayCount: todayBk.data?.length ?? 0,
         weekCount: weekBk.count ?? 0,
-        pendingInquiries: inq.count ?? 0,
+        pendingInquiries: inqCount.count ?? 0,
         totalCustomers: cust.count ?? 0,
         revenue,
         pendingOrders: (productOrders.data ?? []).filter((order) => order.status === 'pending').length,

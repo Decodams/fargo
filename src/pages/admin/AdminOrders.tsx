@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrice, formatRelative } from '@/lib/utils';
-import type { ProductOrder, ProductOrderItem, SettingsMap } from '@/types';
+import type { ProductOrder, ProductOrderItem } from '@/types';
 import StatusBadge from '@/components/ui/StatusBadge';
 
 const STATUS_FILTERS = ['all', 'pending', 'confirmed', 'fulfilled', 'cancelled'] as const;
@@ -21,7 +21,8 @@ export default function AdminOrders() {
       supabase.from('settings').select('key, value'),
     ]);
     setOrders((data ?? []) as ProductOrder[]);
-    const map = ((settings ?? []) as SettingsMap[]).reduce<Record<string, string>>((result, setting) => ({ ...result, ...setting }), {});
+    const map: Record<string, string> = {};
+    ((settings ?? []) as { key: string; value: string }[]).forEach((s) => { map[s.key] = s.value; });
     setCurrency(map.currency_symbol || '₦');
   }, []);
 

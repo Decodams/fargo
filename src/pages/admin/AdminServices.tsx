@@ -156,7 +156,7 @@ export default function AdminServices() {
                 <textarea rows={2} value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                   className="input-field resize-none" placeholder="Brief description" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label-text">Category</label>
                   <select value={editing.category_id} onChange={(e) => setEditing({ ...editing, category_id: e.target.value })}
@@ -171,7 +171,7 @@ export default function AdminServices() {
                     className="input-field" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label-text">Price (in-salon / walk-in)</label>
                   <input type="number" min={0} required value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })}
@@ -185,8 +185,7 @@ export default function AdminServices() {
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-end gap-4 pb-2">
+              <div className="flex flex-wrap items-end gap-x-5 gap-y-2 pb-2">
                   <label className="flex items-center gap-2 text-sm text-ink-700">
                     <input type="checkbox" checked={editing.home_service_eligible} onChange={(e) => setEditing({ ...editing, home_service_eligible: e.target.checked })} />
                     Home service
@@ -199,7 +198,6 @@ export default function AdminServices() {
                     <input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} />
                     Active
                   </label>
-                </div>
               </div>
 
               {error && <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 px-4 py-3">{error}</p>}

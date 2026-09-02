@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, MessageSquare, Scissors, Package, Users, Settings, LogOut, Menu, X, Search, Folder, MessageCircle, DollarSign } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, MessageSquare, Scissors, Package, Users, Settings, LogOut, Menu, X, Search, Folder, MessageCircle, DollarSign, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import TikTokIcon from '@/components/ui/TikTokIcon';
 import logo from '@/image/Logo 2.png';
@@ -12,6 +12,7 @@ const NAV = [
   { to: '/admin/inquiries', label: 'Inquiries', icon: MessageSquare, end: false },
   { to: '/admin/services', label: 'Services', icon: Scissors, end: false },
   { to: '/admin/products', label: 'Products', icon: Package, end: false },
+  { to: '/admin/gallery', label: 'Gallery', icon: ImageIcon, end: false },
   { to: '/admin/customers', label: 'Customers', icon: Users, end: false },
   { to: '/admin/settings', label: 'Settings', icon: Settings, end: false },
   { to: '/admin/pricing', label: 'Pricing', icon: DollarSign, end: false },

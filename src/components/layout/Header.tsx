@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ShoppingBag } from 'lucide-react';
 import logo from '@/image/Logo 2.png';
+import { useCart } from '@/lib/cart';
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
@@ -17,6 +18,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const { count } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -83,6 +85,20 @@ export default function Header() {
 
             <div className="hidden lg:flex items-center gap-4">
               <Link
+                to="/products/checkout"
+                aria-label={`Shopping bag, ${count} item${count === 1 ? '' : 's'}`}
+                className={`relative inline-flex items-center justify-center p-2.5 transition-colors ${
+                  solidHeader ? 'text-ink-800 hover:text-rose-500' : 'text-cream-50 hover:text-rose-400'
+                }`}
+              >
+                <ShoppingBag size={20} />
+                {count > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full bg-rose-500 text-cream-50 text-[10px] font-bold">
+                    {count > 99 ? '99+' : count}
+                  </span>
+                )}
+              </Link>
+              <Link
                 to="/booking"
                 className={`inline-flex items-center justify-center px-6 py-2.5 text-sm tracking-wider-2 uppercase font-medium transition-all duration-300 ${
                   solidHeader
@@ -137,6 +153,15 @@ export default function Header() {
                 className="mt-3 flex items-center justify-center w-full min-h-[52px] border border-ink-200 text-ink-800 text-sm tracking-wider-2 uppercase font-medium hover:border-ink-900"
               >
                 Shop Products
+              </Link>
+              <Link
+                to="/products/checkout"
+                className="mt-3 flex items-center justify-between w-full min-h-[52px] px-5 border border-ink-200 text-ink-800 text-sm tracking-wider-2 uppercase font-medium hover:border-ink-900"
+              >
+                <span className="flex items-center gap-2"><ShoppingBag size={17} /> Shopping Bag</span>
+                <span className={`min-w-[24px] h-6 px-1.5 rounded-full inline-flex items-center justify-center text-xs font-bold ${count > 0 ? 'bg-rose-500 text-cream-50' : 'bg-ink-100 text-ink-500'}`}>
+                  {count > 99 ? '99+' : count}
+                </span>
               </Link>
             </div>
           </nav>

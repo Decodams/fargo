@@ -348,7 +348,7 @@ export default function Booking() {
           })),
         });
         if (bookingError) throw bookingError;
-        reference = typeof createdReference === 'string' ? createdReference : createdReference.reference;
+        reference = typeof createdReference === 'string' ? createdReference : createdReference?.reference;
 
 // Fire notification email (non-blocking — don't fail the booking if email fails)
         try {

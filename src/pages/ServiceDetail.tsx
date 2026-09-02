@@ -112,14 +112,17 @@ export default function ServiceDetail() {
 
   if (!service) {
     return (
-      <div className="pt-32 pb-20 min-h-screen bg-cream-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-display text-ink-900 mb-4">Service not found</h1>
-          <Link to="/services" className="text-rose-500 hover:underline">
-            Back to services
-          </Link>
+      <>
+        <PageMeta title="Service not found" path="/services" noindex />
+        <div className="pt-32 pb-20 min-h-screen bg-cream-50 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-3xl font-display text-ink-900 mb-4">Service not found</h1>
+            <Link to="/services" className="text-rose-500 hover:underline">
+              Back to services
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 

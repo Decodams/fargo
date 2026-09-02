@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Minus, Plus, ShoppingBag, Trash2, Upload } from 'lucide-react';
 import { supabase, isSupabaseConfigured, supabasePublicKey } from '@/lib/supabase';
 import { useSettings } from '@/lib/hooks';
 import { getSetting, formatPrice } from '@/lib/utils';
-import type { Product } from '@/types';
-
-type CartItem = { product: Product; quantity: number };
+import { useCart } from '@/lib/cart';
+import PageMeta from '@/components/ui/PageMeta';
 
 type CheckoutForm = {
   name: string;
@@ -18,17 +17,9 @@ type CheckoutForm = {
   deliveryMethod: 'walk_in' | 'delivery';
 };
 
-function readCart(): CartItem[] {
-  try {
-    return JSON.parse(localStorage.getItem('fargo-cart') || '[]') as CartItem[];
-  } catch {
-    return [];
-  }
-}
-
 export default function ProductCheckout() {
   const { settings } = useSettings();
-  const [cart, setCart] = useState<CartItem[]>(readCart);
+  const { items: cart, subtotal, updateQuantity, remove, clear } = useCart();
   const [form, setForm] = useState<CheckoutForm>({
     name: '', email: '', phone: '', address: '', notes: '', paymentReference: '', deliveryMethod: 'walk_in',
   });
@@ -45,18 +36,7 @@ export default function ProductCheckout() {
   const accountName = getSetting(settings, 'account_name') || 'Fargo Unisex Salon and Spa';
   const deliveryFeeSetting = Number(getSetting(settings, 'delivery_fee') || 0);
   const deliveryFee = form.deliveryMethod === 'delivery' ? deliveryFeeSetting : 0;
-  const subtotal = cart.reduce((sum, item) => sum + (Number(item.product.price) || 0) * item.quantity, 0);
   const total = subtotal + deliveryFee;
-
-  useEffect(() => {
-    localStorage.setItem('fargo-cart', JSON.stringify(cart));
-  }, [cart]);
-
-  const updateQuantity = (productId: string, change: number) => {
-    setCart((current) => current
-      .map((item) => item.product.id === productId ? { ...item, quantity: item.quantity + change } : item)
-      .filter((item) => item.quantity > 0));
-  };
 
   const uploadReceipt = async (file: File) => {
     if (!isSupabaseConfigured) return;
@@ -102,8 +82,9 @@ export default function ProductCheckout() {
           order_data: orderData,
           order_items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity })),
         });
-        if (orderError) throw orderError;
-        orderReference = typeof data === 'string' ? data : data.reference;
+        if (orderError) throw new Error(orderError.message || 'Order failed. Please try again.');
+        orderReference = typeof data === 'string' ? data : data?.reference;
+        if (!orderReference) throw new Error('Order failed. Please try again.');
 
         try {
           const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification`;
@@ -131,8 +112,7 @@ export default function ProductCheckout() {
         orderReference = `FAR-P-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
       }
 
-      localStorage.removeItem('fargo-cart');
-      setCart([]);
+      clear();
       setReference(orderReference);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Order failed. Please try again.');
@@ -166,7 +146,9 @@ export default function ProductCheckout() {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 pt-28 pb-20">
+    <>
+      <PageMeta title="Checkout" path="/products/checkout" noindex />
+      <div className="min-h-screen bg-cream-50 pt-28 pb-20">
       <div className="max-w-5xl mx-auto px-5 sm:px-8 lg:px-12">
         <Link to="/products" className="inline-flex items-center gap-2 text-sm text-ink-500 hover:text-ink-900 mb-8"><ArrowLeft size={15} /> Products</Link>
         <div className="grid lg:grid-cols-5 gap-10 lg:gap-14">
@@ -184,7 +166,7 @@ export default function ProductCheckout() {
                         <p className="font-display text-lg text-ink-900 leading-snug">{item.product.name}</p>
                         <p className="text-sm text-ink-500 mt-0.5">{formatPrice(Number(item.product.price) || 0, currency)}</p>
                       </div>
-                      <button type="button" onClick={() => updateQuantity(item.product.id, -item.quantity)} aria-label={`Remove ${item.product.name}`} className="p-1.5 text-ink-400 hover:text-rose-500 shrink-0"><Trash2 size={16} /></button>
+                      <button type="button" onClick={() => remove(item.product.id)} aria-label={`Remove ${item.product.name}`} className="p-1.5 text-ink-400 hover:text-rose-500 shrink-0"><Trash2 size={16} /></button>
                     </div>
                     <div className="mt-3 inline-flex items-center border border-ink-200">
                       <button type="button" onClick={() => updateQuantity(item.product.id, -1)} aria-label="Decrease quantity" className="w-10 h-10 flex items-center justify-center text-ink-500 hover:text-ink-900 active:bg-ink-100"><Minus size={14} /></button>
@@ -262,5 +244,6 @@ export default function ProductCheckout() {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -52,7 +52,7 @@ export default function AdminProducts() {
         category_id: editing.category_id || null,
         category: editing.category.trim() || null,
         description: editing.description.trim() || null,
-        price: editing.price ? Number(editing.price) : null,
+        price: editing.price === '' || editing.price == null ? null : Number(editing.price),
         image_url: editing.image_url.trim() || null,
         is_active: editing.is_active,
       };
@@ -123,7 +123,7 @@ export default function AdminProducts() {
                 <button onClick={() => handleDelete(p.id)} className="p-1.5 text-ink-500 hover:text-rose-500 transition-colors"><Trash2 size={15} /></button>
               </div>
             </div>
-            {p.price && <p className="text-sm text-ink-700">{formatPrice(p.price)}</p>}
+            {p.price != null && <p className="text-sm text-ink-700">{formatPrice(p.price)}</p>}
             {!p.is_active && <p className="text-xs text-ink-400 mt-1">(inactive)</p>}
           </div>
         ))}
@@ -143,7 +143,7 @@ export default function AdminProducts() {
                 <input type="text" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value, slug: editing.id ? editing.slug : slugify(e.target.value) })}
                   className="input-field" placeholder="Product name" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="label-text">Category</label>
                   <select value={editing.category_id} onChange={(e) => setEditing({ ...editing, category_id: e.target.value, category: categories.find((category) => category.id === e.target.value)?.name ?? '' })}

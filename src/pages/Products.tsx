@@ -3,24 +3,12 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Search, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPrice } from '@/lib/utils';
+import { useCart } from '@/lib/cart';
+import { getProductImage } from '@/lib/productImages';
 import type { Product } from '@/types';
 import { FALLBACK_PRODUCTS, withFallback } from '@/lib/fallbackData';
 import Reveal from '@/components/ui/Reveal';
 import PageMeta from '@/components/ui/PageMeta';
-
-const PRODUCT_IMAGES: Record<string, string> = {
-  'hair-dye-black': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'professional-hair-clippers': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'firm-hold-hair-spray': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'styling-comb-set': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'edge-control-gel': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'moisturising-shampoo': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'deep-conditioner': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'hair-growth-oil-serum': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'wig-extension-care-kit': 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'premium-nail-polish-set': 'https://images.pexels.com/photos/5238075/pexels-photo-5238075.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-  'glow-facial-kit': 'https://images.pexels.com/photos/1470165/pexels-photo-1470165.jpeg?auto=compress&cs=tinysrgb&h=400&w=400',
-};
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -29,23 +17,7 @@ export default function Products() {
   const [activeCat, setActiveCat] = useState('All');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  const [cartCount, setCartCount] = useState(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('fargo-cart') || '[]') as { quantity: number }[];
-      return stored.reduce((sum, item) => sum + item.quantity, 0);
-    } catch {
-      return 0;
-    }
-  });
-
-  const addToCart = (product: Product) => {
-    const stored = JSON.parse(localStorage.getItem('fargo-cart') || '[]') as { product: Product; quantity: number }[];
-    const existing = stored.find((item) => item.product.id === product.id);
-    if (existing) existing.quantity += 1;
-    else stored.push({ product, quantity: 1 });
-    localStorage.setItem('fargo-cart', JSON.stringify(stored));
-    setCartCount(stored.reduce((sum, item) => sum + item.quantity, 0));
-  };
+  const { count: cartCount, add: addToCart } = useCart();
 
   useEffect(() => {
     supabase
@@ -151,23 +123,25 @@ export default function Products() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               {filtered.map((product, i) => (
                 <Reveal key={product.id} delay={(i % 4) * 60}>
-                  <div className="group block">
-                    <div className="aspect-square bg-cream-100 overflow-hidden mb-4">
-                      <img
-                        src={PRODUCT_IMAGES[product.slug] ?? product.image_url ?? IMAGES_PLACEHOLDER}
-                        alt={product.name}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                    <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-1">{product.category}</p>
-                    <h3 className="text-base font-display text-ink-900 group-hover:text-rose-500 transition-colors leading-tight">
-                      {product.name}
-                    </h3>
-                    {product.price && (
-                      <p className="text-sm text-ink-700 mt-2">{formatPrice(product.price)}</p>
-                    )}
-                    <button type="button" onClick={() => addToCart(product)} className="inline-flex items-center gap-1.5 mt-3 text-xs uppercase tracking-wider-2 text-ink-500 hover:text-rose-500 transition-colors">
+                  <div className="group">
+                    <Link to={`/products/${product.slug}`} className="block">
+                      <div className="aspect-square bg-cream-100 overflow-hidden mb-4">
+                        <img
+                          src={getProductImage(product)}
+                          alt={product.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                      <p className="text-xs uppercase tracking-wider-2 text-ink-400 mb-1">{product.category}</p>
+                      <h3 className="text-base font-display text-ink-900 group-hover:text-rose-500 transition-colors leading-tight">
+                        {product.name}
+                      </h3>
+                      {product.price != null && (
+                        <p className="text-sm text-ink-700 mt-2">{formatPrice(product.price)}</p>
+                      )}
+                    </Link>
+                    <button type="button" onClick={() => addToCart(product)} className="mt-3 inline-flex items-center gap-1.5 text-xs uppercase tracking-wider-2 text-ink-500 hover:text-rose-500 transition-colors">
                       Add to bag <ArrowRight size={13} />
                     </button>
                   </div>
@@ -180,5 +154,3 @@ export default function Products() {
     </>
   );
 }
-
-const IMAGES_PLACEHOLDER = 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&h=400&w=400';
