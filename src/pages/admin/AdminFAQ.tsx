@@ -11,6 +11,7 @@ export default function AdminFAQ() {
   const [initialized, setInitialized] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
   const [openSection, setOpenSection] = useState<number | null>(0);
 
   if (!loading && !initialized) {
@@ -39,11 +40,14 @@ export default function AdminFAQ() {
 
   const handleSave = async () => {
     setSaving(true);
+    setError('');
     try {
       const merged = { ...settings, faq_sections: JSON.stringify(sections) };
       await saveSettings(merged);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -154,6 +158,12 @@ export default function AdminFAQ() {
       ))}
 
       <SaveBar saving={saving} saved={saved} onSave={handleSave} />
+
+      {error && (
+        <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 px-4 py-3 -mt-4">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

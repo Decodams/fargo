@@ -13,6 +13,7 @@ export interface Service {
   description: string | null;
   duration_minutes: number;
   price: number;
+  home_service_price?: number | null;
   home_service_eligible: boolean;
   per_person: boolean;
   is_active: boolean;

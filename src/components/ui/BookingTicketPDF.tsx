@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 export function useBookingTicket() {
   const { state } = useLocation();
-  const { reference, name, services, date, mode, total, prepay, bank_name, account_number, account_name } = state || {};
+  const { reference, name, services, date, mode, total, prepay, bank_name, account_number, account_name, staff_name, staff_role } = state || {};
 
   const generatePDF = () => {
     if (!reference || !name) return;
@@ -57,7 +57,7 @@ export function useBookingTicket() {
 
     // Section: Booking Details
     doc.setFillColor(245, 240, 232); // cream-100
-    doc.roundedRect(margin, y, contentWidth, 58, 2, 2, 'F');
+    doc.roundedRect(margin, y, contentWidth, 72, 2, 2, 'F');
     y += 8;
 
     const leftCol = margin + 6;
@@ -91,6 +91,22 @@ export function useBookingTicket() {
     doc.setTextColor(26, 22, 18);
     doc.text(mode === 'in_salon' ? 'In Salon' : 'Home Service', leftCol, y);
     doc.text(`₦${total?.toLocaleString()} (Bank Transfer)`, rightCol, y);
+    y += 14;
+
+    // Row 3: Specialist
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(138, 119, 102);
+    doc.text('SPECIALIST', leftCol, y);
+    doc.text('PAYMENT STATUS', rightCol, y);
+    y += 5;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(26, 22, 18);
+    doc.text(staff_name ? `${staff_name}${staff_role ? ` · ${staff_role}` : ''}` : 'Any available specialist', leftCol, y);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(prepay ? 'Pending verification' : 'Confirmed', rightCol, y);
     y += 14;
 
     // Services list

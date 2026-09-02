@@ -12,6 +12,7 @@ interface EditState {
   category_id: string;
   duration_minutes: number | string;
   price: number | string;
+  home_service_price: number | string;
   home_service_eligible: boolean;
   per_person: boolean;
   is_active: boolean;
@@ -19,7 +20,7 @@ interface EditState {
 
 const EMPTY: EditState = {
   name: '', slug: '', description: '', category_id: '', duration_minutes: 60,
-  price: '', home_service_eligible: false, per_person: false, is_active: true,
+  price: '', home_service_price: '', home_service_eligible: false, per_person: false, is_active: true,
 };
 
 export default function AdminServices() {
@@ -55,6 +56,7 @@ export default function AdminServices() {
         category_id: editing.category_id,
         duration_minutes: Number(editing.duration_minutes) || 0,
         price: Number(editing.price) || 0,
+        home_service_price: editing.home_service_price === '' ? null : Number(editing.home_service_price) || null,
         home_service_eligible: editing.home_service_eligible,
         per_person: editing.per_person,
         is_active: editing.is_active,
@@ -87,6 +89,7 @@ export default function AdminServices() {
       id: svc.id, name: svc.name, slug: svc.slug, description: svc.description ?? '',
       category_id: svc.category_id, duration_minutes: svc.duration_minutes,
       price: svc.price,
+      home_service_price: svc.home_service_price ?? '',
       home_service_eligible: svc.home_service_eligible, per_person: svc.per_person,
       is_active: svc.is_active,
     });
@@ -116,6 +119,7 @@ export default function AdminServices() {
                 </div>
                 <p className="text-xs text-ink-500">
                   {cat?.name ?? 'Uncategorized'} • {formatDuration(svc.duration_minutes)} • {formatPrice(svc.price)}
+                  {svc.home_service_price != null && ` · Home: ${formatPrice(svc.home_service_price)}`}
                 </p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
@@ -169,10 +173,17 @@ export default function AdminServices() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label-text">Price</label>
+                  <label className="label-text">Price (in-salon / walk-in)</label>
                   <input type="number" min={0} required value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })}
                     className="input-field" />
                 </div>
+                {editing.home_service_eligible && (
+                  <div>
+                    <label className="label-text">Price (home service)</label>
+                    <input type="number" min={0} value={editing.home_service_price} placeholder="Optional" onChange={(e) => setEditing({ ...editing, home_service_price: e.target.value })}
+                      className="input-field" />
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-end gap-4 pb-2">

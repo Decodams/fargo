@@ -13,6 +13,7 @@ export default function AdminGallery() {
   const [initialized, setInitialized] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
 
   if (!loading && !initialized) {
     const raw = settings.gallery_items ?? DEFAULT_SETTINGS.gallery_items ?? '';
@@ -55,11 +56,14 @@ export default function AdminGallery() {
 
   const handleSave = async () => {
     setSaving(true);
+    setError('');
     try {
       const merged = { ...settings, gallery_items: JSON.stringify(items) };
       await saveSettings(merged);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -122,6 +126,12 @@ export default function AdminGallery() {
       </div>
 
       <SaveBar saving={saving} saved={saved} onSave={handleSave} />
+
+      {error && (
+        <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 px-4 py-3 -mt-4">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

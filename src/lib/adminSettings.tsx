@@ -27,9 +27,27 @@ export function useAdminSettings() {
 }
 
 export async function saveSettings(settings: SettingsMap): Promise<void> {
+  // Try to refresh the session first so a stale token doesn't 401 mid-save
+  // (which would otherwise surface as a confusing sign-out).
+  try {
+    await supabase.auth.refreshSession();
+  } catch {
+    // ignore refresh failure — the upsert below will surface the real state
+  }
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) {
+    throw new Error('Your session has expired. Please sign in again.');
+  }
+
   const entries = Object.entries(settings);
   for (const [key, value] of entries) {
-    await supabase.from('settings').upsert({ key, value }, { onConflict: 'key' });
+    const { error } = await supabase.from('settings').upsert({ key, value }, { onConflict: 'key' });
+    if (error) {
+      if (error.code === 'PGRST301' || error.code === 'PGRST304' || error.message?.toLowerCase().includes('jwt')) {
+        throw new Error('Your session has expired. Please sign in again.');
+      }
+      throw error;
+    }
   }
 }
 

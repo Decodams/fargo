@@ -6,15 +6,19 @@ export default function AdminSEO() {
   const { settings, update, loading } = useAdminSettings();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
 
   const val = (key: string) => settings[key] ?? DEFAULT_SETTINGS[key] ?? '';
 
   const handleSave = async () => {
     setSaving(true);
+    setError('');
     try {
       await saveSettings(settings);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -43,6 +47,12 @@ export default function AdminSEO() {
       </AdminSection>
 
       <SaveBar saving={saving} saved={saved} onSave={handleSave} />
+
+      {error && (
+        <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 px-4 py-3 -mt-4">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

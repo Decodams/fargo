@@ -112,7 +112,18 @@ export default function AdminStaff() {
                   if (file) void handleImageUpload(file);
                   e.target.value = '';
                 }} className="input-field file:mr-3 file:border-0 file:bg-ink-900 file:px-3 file:py-1.5 file:text-cream-50" />
-                {editing.image_url && <img src={editing.image_url} alt="Staff preview" className="mt-3 h-24 w-24 object-cover border border-ink-100" />}
+                {editing.image_url && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <img src={editing.image_url} alt="Staff preview" className="h-24 w-24 object-cover border border-ink-100" />
+                    <button
+                      type="button"
+                      onClick={() => setEditing({ ...editing, image_url: '' })}
+                      className="text-sm text-rose-500 hover:text-rose-600 underline"
+                    >
+                      Remove image
+                    </button>
+                  </div>
+                )}
               </div>
               <div>
             <label className="label-text">Bio</label>

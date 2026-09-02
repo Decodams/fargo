@@ -23,6 +23,8 @@ export default function BookingConfirmation() {
   const total = navigateState.total;
   const prepay = navigateState.prepay;
   const customerEmail = navigateState.customer_email;
+  const staffName = navigateState.staff_name;
+  const staffRole = navigateState.staff_role;
   const bankName = navigateState.bank_name || 'Moniepoint';
   const accountNumber = navigateState.account_number || '5308789513';
   const accountName = navigateState.account_name || 'Fargo Unisex Salon and Spa';
@@ -127,6 +129,12 @@ export default function BookingConfirmation() {
                     <span className="text-ink-900 font-medium">{name}</span>
                   </div>
                 )}
+                {staffName && (
+                  <div className="flex justify-between">
+                    <span className="text-ink-500">Specialist</span>
+                    <span className="text-ink-900 font-medium">{staffName}{staffRole ? ` · ${staffRole}` : ''}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-ink-500">Date</span>
                   <span className="text-ink-900">{formattedDate}</span>
@@ -224,6 +232,12 @@ export default function BookingConfirmation() {
                   <p className="text-ink-400 text-xs uppercase tracking-wider mb-1">Mode</p>
                   <p className="text-cream-50">{mode === 'in_salon' ? 'In Salon' : 'Home Service'}</p>
                 </div>
+                {staffName && (
+                  <div>
+                    <p className="text-ink-400 text-xs uppercase tracking-wider mb-1">Specialist</p>
+                    <p className="text-cream-50 font-medium">{staffName}{staffRole ? ` · ${staffRole}` : ''}</p>
+                  </div>
+                )}
               </div>
 
               <div className="mb-6">

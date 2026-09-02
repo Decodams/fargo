@@ -171,7 +171,8 @@ export default function Booking() {
 
   // Per-person: multiply price for services with per_person=true
   const serviceTotal = state.selectedServices.reduce((sum, s) => {
-    const unitPrice = s.price;
+    const isHome = state.mode === 'home' && s.home_service_price != null;
+    const unitPrice = isHome ? s.home_service_price! : s.price;
     if (perPersonEnabled && s.per_person) {
       return sum + unitPrice * (Number(state.partySize) || 1);
     }
@@ -341,7 +342,7 @@ export default function Booking() {
           booking_services: state.selectedServices.map((s) => ({
             service_id: s.id,
             service_name: s.name,
-            price: s.price,
+            price: (state.mode === 'home' && s.home_service_price != null) ? s.home_service_price : s.price,
             quantity: (perPersonEnabled && s.per_person) ? Number(state.partySize) || 1 : 1,
             duration_minutes: s.duration_minutes,
           })),
@@ -366,6 +367,8 @@ export default function Booking() {
               duration_minutes: totalDuration + bufferMin,
               total_price: grandTotal,
               services: state.selectedServices.map((s) => s.name),
+              staff_name: staff.find((m) => m.id === state.staffId)?.name ?? null,
+              staff_role: staff.find((m) => m.id === state.staffId)?.role ?? null,
               home_address: state.mode === 'home' ? state.homeAddress.trim() : null,
               notes: state.notes.trim() || null,
               confirmation_status: 'pending',
@@ -381,6 +384,7 @@ export default function Booking() {
       }
 
       // Navigate to confirmation with reference
+      const selectedStaff = staff.find((m) => m.id === state.staffId) ?? null;
       navigate('/booking/confirmation', {
         state: {
           reference: reference,
@@ -395,6 +399,8 @@ export default function Booking() {
           prepay: state.prepay,
           confirmation_status: 'pending',
           customer_email: state.customerEmail,
+          staff_name: selectedStaff?.name || null,
+          staff_role: selectedStaff?.role || null,
           bank_name: bankName,
           account_number: accountNumber,
           account_name: accountName,
